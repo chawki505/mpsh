@@ -1,7 +1,59 @@
-#include "extra.h"
-#include "parser.h"
-#include "commandes_internes.h"
-#include "traitement.h"
+#include "variables.h"
+
+
+char *scan_redirection_entrante(char *arguments[32]) {
+    char *redirection = NULL;
+    int increment = 0;
+
+    while (arguments[increment] != NULL) {
+        if (strcmp(arguments[increment], "<") == 0) {
+            redirection = arguments[increment + 1];
+            free(arguments[increment]);
+            while (arguments[increment + 2] != NULL) {
+                arguments[increment] = arguments[increment + 2];
+                ++increment;
+            }
+            arguments[increment] = NULL;
+        }
+        ++increment;
+    }
+    return redirection;
+}
+
+char *scan_redirection_sortante(char *arguments[32]) {
+    char *redirection = NULL;
+    int increment = 0;
+
+    while (arguments[increment] != NULL) {
+        if (strcmp(arguments[increment], ">") == 0) {
+            redirection = malloc(strlen(arguments[increment + 1]) + 1);
+            redirection[0] = 'w';
+            redirection[1] = '\0';
+            strcat(redirection, arguments[increment + 1]);
+            free(arguments[increment]);
+            free(arguments[increment + 1]);
+            while (arguments[increment + 2] != NULL) {
+                arguments[increment] = arguments[increment + 2];
+                ++increment;
+            }
+            arguments[increment] = NULL;
+        } else if (strcmp(arguments[increment], ">>") == 0) {
+            redirection = malloc(strlen(arguments[increment + 1]) + 1);
+            redirection[0] = 'a';
+            redirection[1] = '\0';
+            strcat(redirection, arguments[increment + 1]);
+            free(arguments[increment]);
+            free(arguments[increment + 1]);
+            while (arguments[increment + 2] != NULL) {
+                arguments[increment] = arguments[increment + 2];
+                ++increment;
+            }
+            arguments[increment] = NULL;
+        }
+        ++increment;
+    }
+    return redirection;
+}
 
 
 
@@ -10,13 +62,17 @@ char *lecture() {
     char *lu = NULL;
 
     if (global_argc > 1) {
+
         tmp = malloc(152);
         lu = fgets(tmp, 150, fichier);
         if (lu == NULL) exit(EXIT_SUCCESS);
         if (tmp[strlen(tmp) - 1] == '\n') tmp[strlen(tmp) - 1] = '\0';
+
     } else {
+
         char dossier_en_cours[4096];
         dossier_en_cours[0] = '\0';
+
         if (strncmp(getenv("PWD"), getenv("HOME"), strlen(getenv("HOME"))) == 0) {
             char *temp_home = getenv("PWD");
             temp_home = temp_home + strlen(getenv("HOME"));
@@ -31,11 +87,14 @@ char *lecture() {
     return tmp;
 }
 
+
+
+
 int main(int argc, char *argv[], char *arge[]) {
+
     global_argc = argc;
 
     using_history();
-
     FILE *handle = fopen(".mpsh_history", "r");
     if (handle == NULL) handle = fopen(".mpsh_history", "w");
     fclose(handle);

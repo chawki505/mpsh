@@ -1,28 +1,27 @@
-//
-// Created by chawki on 30/12/18.
-//
 
 #include "commandes_internes.h"
 
-
-
 void my_cd() {
+
     char *chemin = strstr(buffer, " ");
     size_t longueur_chemin = strcspn(chemin + 1, " ");
     char *dossier = strndup(chemin + 1, longueur_chemin);
     int retour = chdir(dossier);
+
     if (retour != 0) {
         fprintf(stderr, "my_cd : %s", strerror(errno));
     } else {
+
         char *ancien_chemin = getenv("PWD");
         char buffer_cwd[1024];
-        getcwd(buffer_cwd, 4096);
+
+        getcwd(buffer_cwd, sizeof(buffer_cwd));
+
         setenv("PWD", buffer_cwd, 1);
+
         setenv("OLDPWD", ancien_chemin, 1);
     }
 }
-
-
 
 
 void my_history() {
@@ -110,8 +109,6 @@ void my_set() {
 void my_exit() { exit(EXIT_SUCCESS); }
 
 
-
-
 int traitement_fichier_sh(char **argv) {
 
     //ignoré le commantaire du scripte shell
@@ -151,6 +148,7 @@ int traitement_fichier_sh(char **argv) {
         }
 
         char *arg_list_temp[32];
+
         arg_list_temp[0] = strndup(formule, retour);
         arg_list_temp[1] = strdup(formule + retour + 1);
         arg_list_temp[2] = NULL;
@@ -287,3 +285,4 @@ int traitement_fichier_sh(char **argv) {
     }
     return 1;
 }
+

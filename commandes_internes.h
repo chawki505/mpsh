@@ -1,29 +1,24 @@
-//
-// Created by chawki on 30/12/18.
-//
 
 #ifndef SHELL_COMMANDES_INTERNES_H
 #define SHELL_COMMANDES_INTERNES_H
 
-#include <unistd.h>
-#include <errno.h>
-#include "traitement.h"
+#include "variables.h"
 
 
-void my_cd();
+extern void my_cd();
 
-void my_exit();
+extern void my_exit();
 
-void my_set();
+extern void my_set();
 
-void my_unset();
+extern void my_unset();
 
-void my_export();
+extern void my_export();
 
-void my_get_cmd_history(char **argv);
+extern void my_get_cmd_history(char **argv);
 
-void my_history();
+extern void my_history();
 
-int traitement_fichier_sh(char **argv);
+extern int traitement_fichier_sh(char **argv);
 
 #endif //SHELL_COMMANDES_INTERNES_H

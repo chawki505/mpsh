@@ -1,8 +1,4 @@
-
-
 #include "extra.h"
-
-Environnement *var_environnement;
 
 
 void ajout_environnement(char *nom_variable, char *valeur_variable) {
@@ -36,7 +32,6 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
             }
             liste->next = new_env;
         } else {
-
             var_environnement = new_env;
         }
     }
@@ -78,9 +73,6 @@ void gestion_variables(char *arguments[32], char **argv, int global_argc) {
         ++increment;
     }
 }
-
-
-
 
 
 int touche_fleche_haute() {

@@ -2,7 +2,49 @@
 // Created by chawki on 30/12/18.
 //
 
-#include "traitement.h"
+#include "analyseur.h"
+
+
+void str_replace(char *chaine, char *recherche, char *remplace) {
+    int nbre = 0;
+    char *p = chaine;
+    char *tmp = strstr(p, recherche);
+    while (tmp != NULL) {
+        ++nbre;
+        p = tmp + strlen(recherche);
+        tmp = strstr(p, recherche);
+    }
+    if (nbre > 0) {
+        char *chaine_copie = malloc(strlen(chaine) - (strlen(recherche) * nbre) + (strlen(remplace) * nbre) + 1);
+        chaine_copie[0] = '\0';
+        p = chaine;
+        tmp = strstr(p, recherche);
+        while (tmp != NULL) {
+            strncat(chaine_copie, p, tmp - p);
+            strcat(chaine_copie, remplace);
+            p = tmp + strlen(recherche);
+            tmp = strstr(p, recherche);
+        }
+        strcat(chaine_copie, p);
+        strcpy(chaine, chaine_copie);
+        free(chaine_copie);
+    }
+}
+
+
+void traitement_espaces_debut(char *chaine_a_traiter) {
+    char *nouvelle_chaine = chaine_a_traiter;
+    while (nouvelle_chaine[0] == ' ') {
+        ++nouvelle_chaine;
+    }
+    memmove(chaine_a_traiter, nouvelle_chaine, strlen(nouvelle_chaine) + 1);
+}
+
+void traitement_espaces_fin(char *chaine_a_traiter) {
+    while (chaine_a_traiter[strlen(chaine_a_traiter) - 1] == ' ') {
+        chaine_a_traiter[strlen(chaine_a_traiter) - 1] = '\0';
+    }
+}
 
 
 void traitement_cmd(char *commande, char **argv) {
@@ -113,8 +155,6 @@ void traitement_cmd(char *commande, char **argv) {
 }
 
 
-
-
 void creation_liste_arguments(char *arguments[32], char *commande) {
     int boucle, increment;
     size_t longueur;
@@ -140,7 +180,6 @@ void creation_liste_arguments(char *arguments[32], char *commande) {
 }
 
 
-
 void liberation_arguments(char *arguments[32]) {
     int increment = 0;
     while (arguments[increment] != NULL) {
@@ -148,8 +187,6 @@ void liberation_arguments(char *arguments[32]) {
         increment++;
     }
 }
-
-
 
 
 void traitement_joker(char *arguments[32]) {
@@ -192,16 +229,16 @@ void traitement_joker(char *arguments[32]) {
 }
 
 
-
 void traitement_ligne(char **argv) {
     traitement_espaces_debut(buffer);
     traitement_espaces_fin(buffer);
 
+    //traitement des commandes internes
     if (strncmp(buffer, "cd", 2) == 0) {
         my_cd();
     } else if (strcmp(buffer, "exit") == 0) {
         my_exit();
-    } else if (traitement_fichier_sh(argv) == 0) {}
+    } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
     else if (strcmp(buffer, "set") == 0) {
         my_set();
     } else if (strncmp(buffer, "unset", 5) == 0) {
@@ -215,7 +252,7 @@ void traitement_ligne(char **argv) {
     } else if (strncmp(buffer, "exit", 4) == 0) {
         my_exit();
     } else {
-        //traitement des commandes externe
+        //traitement des commandes externes
         char *cmd = strdup(buffer);
         char *tmp = strtok(cmd, ";");
         while (tmp != NULL) {
@@ -231,57 +268,3 @@ void traitement_ligne(char **argv) {
     }
 }
 
-
-char *scan_redirection_entrante(char *arguments[32]) {
-    char *redirection = NULL;
-    int increment = 0;
-
-    while (arguments[increment] != NULL) {
-        if (strcmp(arguments[increment], "<") == 0) {
-            redirection = arguments[increment + 1];
-            free(arguments[increment]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        }
-        ++increment;
-    }
-    return redirection;
-}
-
-char *scan_redirection_sortante(char *arguments[32]) {
-    char *redirection = NULL;
-    int increment = 0;
-
-    while (arguments[increment] != NULL) {
-        if (strcmp(arguments[increment], ">") == 0) {
-            redirection = malloc(strlen(arguments[increment + 1]) + 1);
-            redirection[0] = 'w';
-            redirection[1] = '\0';
-            strcat(redirection, arguments[increment + 1]);
-            free(arguments[increment]);
-            free(arguments[increment + 1]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        } else if (strcmp(arguments[increment], ">>") == 0) {
-            redirection = malloc(strlen(arguments[increment + 1]) + 1);
-            redirection[0] = 'a';
-            redirection[1] = '\0';
-            strcat(redirection, arguments[increment + 1]);
-            free(arguments[increment]);
-            free(arguments[increment + 1]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        }
-        ++increment;
-    }
-    return redirection;
-}

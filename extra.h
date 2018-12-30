@@ -1,33 +1,17 @@
-
-
 #ifndef SHELL_EXTRA_H
 #define SHELL_EXTRA_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <glob.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include "variables.h"
 
+extern void ajout_environnement(char *nom_variable, char *valeur_variable);
 
-typedef struct Environnement {
-    char *nom;
-    char *valeur;
-    struct Environnement *next;
-} Environnement;
+extern void gestion_variables(char *arguments[32], char **argv, int global_argc);
 
-Environnement *var_environnement;
+extern int touche_fleche_haute();
 
-void ajout_environnement(char *nom_variable, char *valeur_variable);
+extern int touche_tab();
 
-void gestion_variables(char *arguments[32], char **argv, int global_argc);
-
-int touche_fleche_haute();
-
-int touche_tab();
-
-int double_touche_tab();
+extern int double_touche_tab();
 
 
 #endif //SHELL_EXTRA_H
