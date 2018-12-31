@@ -1,6 +1,7 @@
 #include "variables.h"
 
 
+//methode pour les redirection entrante <
 char *scan_redirection_entrante(char *arguments[32]) {
     char *redirection = NULL;
     int increment = 0;
@@ -20,6 +21,7 @@ char *scan_redirection_entrante(char *arguments[32]) {
     return redirection;
 }
 
+//methode pour les redirection sortante > et >>
 char *scan_redirection_sortante(char *arguments[32]) {
     char *redirection = NULL;
     int increment = 0;
@@ -56,31 +58,50 @@ char *scan_redirection_sortante(char *arguments[32]) {
 }
 
 
+//methode de l'ecture de l'entré du shell
 char *lecture() {
     char *tmp = NULL;
     char *lu = NULL;
 
+    //test si c'est un fichier scripte en entre (eg. ./mpsh script.sh)
     if (global_argc > 1) {
         tmp = malloc(152);
         lu = fgets(tmp, 150, fichier);
-        if (lu == NULL) exit(EXIT_SUCCESS);
-        if (tmp[strlen(tmp) - 1] == '\n') tmp[strlen(tmp) - 1] = '\0';
+        if (lu == NULL) {
+            exit(EXIT_SUCCESS);
+        }
+        if (tmp[strlen(tmp) - 1] == '\n') {
+            tmp[strlen(tmp) - 1] = '\0';
+        }
 
     } else {
-        char dossier_en_cours[4096];
-        dossier_en_cours[0] = '\0';
+        //lecture prompt
+        char prompt[4096];
+        prompt[0]='\0';
+
+
+        strcat(prompt,"\033[1;31m");
+        strcat(prompt, getenv("USER"));
+        strcat(prompt,"@");
+        strcat(prompt,"hostname");
+        strcat(prompt,"\033[0m:\033[1;34m");
 
         if (strncmp(getenv("PWD"), getenv("HOME"), strlen(getenv("HOME"))) == 0) {
             char *temp_home = getenv("PWD");
             temp_home = temp_home + strlen(getenv("HOME"));
-            strcat(dossier_en_cours, "~");
-            strcat(dossier_en_cours, temp_home);
+            strcat(prompt, "~");
+            strcat(prompt, temp_home);
 
         } else {
-            strcat(dossier_en_cours, getenv("PWD"));
+            strcat(prompt, getenv("PWD"));
         }
-        strcat(dossier_en_cours, "$ ");
-        tmp = readline(dossier_en_cours);
+
+
+        strcat(prompt, "\033[0m$ ");
+
+
+
+        tmp = readline(prompt);
 
     }
     return tmp;
@@ -114,6 +135,7 @@ int main(int argc, char *argv[], char *arge[]) {
     }
 
 
+    //bind key clavier pour afichage des commandes
     rl_bind_keyseq("\e[A", touche_fleche_haute);
     rl_bind_key('\t', touche_tab);
     rl_bind_keyseq("\t\t", double_touche_tab);

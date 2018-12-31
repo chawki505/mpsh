@@ -118,7 +118,7 @@ void traitement_cmd(char *commande, char **argv) {
         exit(0);
 
     } else {
-       wait(&process1);
+        wait(&process1);
     }
 
     if (cmd2 != NULL) {
@@ -145,10 +145,9 @@ void traitement_cmd(char *commande, char **argv) {
             if (retour == -1) fprintf(stderr, "%s\n", strerror(errno));
             exit(0);
         } else {
-          //wait(&process2);
+            //wait(&process2);
         }
     }
-
 
 
     if (cmd2 != NULL) {
@@ -253,6 +252,8 @@ void traitement_ligne(char **argv) {
         my_cd();
     } else if (strcmp(buffer, "exit") == 0) {
         my_exit();
+    } else if (strcmp(buffer, "?") == 0) {
+
     } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
     else if (strcmp(buffer, "set") == 0) {
         my_set();
