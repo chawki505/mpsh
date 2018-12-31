@@ -98,6 +98,7 @@ void my_unset() {
     }
 }
 
+//methode pour afficher les variable d'environement enregistré
 void my_set() {
     Environnement *liste = var_environnement;
     while (liste != NULL) {

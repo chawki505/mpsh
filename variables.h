@@ -10,7 +10,6 @@
 #include <glob.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <sys/types.h>
 
 
 #include "commandes_internes.h"

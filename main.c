@@ -56,20 +56,17 @@ char *scan_redirection_sortante(char *arguments[32]) {
 }
 
 
-
 char *lecture() {
     char *tmp = NULL;
     char *lu = NULL;
 
     if (global_argc > 1) {
-
         tmp = malloc(152);
         lu = fgets(tmp, 150, fichier);
         if (lu == NULL) exit(EXIT_SUCCESS);
         if (tmp[strlen(tmp) - 1] == '\n') tmp[strlen(tmp) - 1] = '\0';
 
     } else {
-
         char dossier_en_cours[4096];
         dossier_en_cours[0] = '\0';
 
@@ -78,24 +75,27 @@ char *lecture() {
             temp_home = temp_home + strlen(getenv("HOME"));
             strcat(dossier_en_cours, "~");
             strcat(dossier_en_cours, temp_home);
+
         } else {
             strcat(dossier_en_cours, getenv("PWD"));
         }
         strcat(dossier_en_cours, "$ ");
         tmp = readline(dossier_en_cours);
+
     }
     return tmp;
 }
 
 
-
-
 int main(int argc, char *argv[], char *arge[]) {
 
+    //save le nombre d'arguments
     global_argc = argc;
 
+    //init hystory
     using_history();
     FILE *handle = fopen(".mpsh_history", "r");
+    //test si exite sinon le creer
     if (handle == NULL) handle = fopen(".mpsh_history", "w");
     fclose(handle);
     read_history(".mpsh_history");
@@ -103,8 +103,8 @@ int main(int argc, char *argv[], char *arge[]) {
     write_history(".mpsh_history");
 
 
+    //ajout des variables d'environement dans notre shell
     int increment = 0;
-
     while (arge[increment] != NULL) {
         char *valeur = strstr(arge[increment], "=");
         char *nom = strndup(arge[increment], strlen(arge[increment]) - strlen(valeur));

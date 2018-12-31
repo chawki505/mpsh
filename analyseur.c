@@ -5,6 +5,7 @@
 #include "analyseur.h"
 
 
+//methode pour remplacer une chaine avec une autre chaine
 void str_replace(char *chaine, char *recherche, char *remplace) {
     int nbre = 0;
     char *p = chaine;
@@ -32,6 +33,7 @@ void str_replace(char *chaine, char *recherche, char *remplace) {
 }
 
 
+//suprime les espace au debut de la chaine
 void traitement_espaces_debut(char *chaine_a_traiter) {
     char *nouvelle_chaine = chaine_a_traiter;
     while (nouvelle_chaine[0] == ' ') {
@@ -40,6 +42,7 @@ void traitement_espaces_debut(char *chaine_a_traiter) {
     memmove(chaine_a_traiter, nouvelle_chaine, strlen(nouvelle_chaine) + 1);
 }
 
+//suprime les espaces en fin de chaine et ajouter ajouter le caractere de fin
 void traitement_espaces_fin(char *chaine_a_traiter) {
     while (chaine_a_traiter[strlen(chaine_a_traiter) - 1] == ' ') {
         chaine_a_traiter[strlen(chaine_a_traiter) - 1] = '\0';
@@ -47,6 +50,7 @@ void traitement_espaces_fin(char *chaine_a_traiter) {
 }
 
 
+//traitement d'une commande
 void traitement_cmd(char *commande, char **argv) {
     char *cmd1, *cmd2;
     char *fichier_redirection_sortante, *fichier_redirection_entrante;
@@ -108,12 +112,17 @@ void traitement_cmd(char *commande, char **argv) {
             }
             free(type_redirection);
         }
+
         int retour = execvp(arg_list[0], arg_list);
         if (retour == -1) fprintf(stderr, "%s\n", strerror(errno));
         exit(0);
+
     } else {
-        wait(&process1);
+       wait(&process1);
     }
+
+    kill(process1,EXIT_SUCCESS);
+
     if (cmd2 != NULL) {
         pid_t process2 = fork();
         if (process2 == 0) {
@@ -138,9 +147,11 @@ void traitement_cmd(char *commande, char **argv) {
             if (retour == -1) fprintf(stderr, "%s\n", strerror(errno));
             exit(0);
         } else {
-            wait(&process2);
+          //wait(&process2);
         }
     }
+
+
 
     if (cmd2 != NULL) {
         if (fichier_redirection_sortante2 != NULL) free(fichier_redirection_sortante2);
@@ -155,6 +166,7 @@ void traitement_cmd(char *commande, char **argv) {
 }
 
 
+//methode pour creer un liste des arguments de la commande donner en entrer
 void creation_liste_arguments(char *arguments[32], char *commande) {
     int boucle, increment;
     size_t longueur;
@@ -162,10 +174,12 @@ void creation_liste_arguments(char *arguments[32], char *commande) {
     for (boucle = 0; boucle < 32; ++boucle) {
         arguments[boucle] = NULL;
     }
+
     longueur = strcspn(commande, " \"");
     arguments[0] = strndup(commande, longueur);
     commande = commande + longueur;
     increment = 1;
+
     while (strlen(commande) > 0) {
         if (commande[0] == ' ') ++commande;
         char *separateur = " ";
@@ -180,6 +194,7 @@ void creation_liste_arguments(char *arguments[32], char *commande) {
 }
 
 
+//vider la memoire des arguments
 void liberation_arguments(char *arguments[32]) {
     int increment = 0;
     while (arguments[increment] != NULL) {
@@ -188,7 +203,7 @@ void liberation_arguments(char *arguments[32]) {
     }
 }
 
-
+//traitement du caractere *
 void traitement_joker(char *arguments[32]) {
     char *arg_list_tmp[32];
 
@@ -229,7 +244,9 @@ void traitement_joker(char *arguments[32]) {
 }
 
 
+//traitement d'une ligne de commande
 void traitement_ligne(char **argv) {
+
     traitement_espaces_debut(buffer);
     traitement_espaces_fin(buffer);
 
