@@ -121,8 +121,6 @@ void traitement_cmd(char *commande, char **argv) {
        wait(&process1);
     }
 
-    kill(process1,EXIT_SUCCESS);
-
     if (cmd2 != NULL) {
         pid_t process2 = fork();
         if (process2 == 0) {
