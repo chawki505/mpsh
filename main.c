@@ -2,7 +2,7 @@
 
 
 //methode pour les redirection entrante <
-char *scan_redirection_entrante(char *arguments[32]) {
+char *scan_redirection_entrante(char *arguments[TAILLE_LIST_ARGS]) {
     char *redirection = NULL;
     int increment = 0;
 
@@ -22,7 +22,7 @@ char *scan_redirection_entrante(char *arguments[32]) {
 }
 
 //methode pour les redirection sortante > et >>
-char *scan_redirection_sortante(char *arguments[32]) {
+char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
     char *redirection = NULL;
     int increment = 0;
 
@@ -64,6 +64,11 @@ char *lecture() {
     char *lu = NULL;
 
     //test si c'est un fichier scripte en entre (eg. ./mpsh script.sh)
+    //Lors du lancement de l'interpréteur avec un nom de fichier en paramètre, readline attendait la saisie de quelque chose au clavier.
+    //Plutôt que travailler avec stdin, je travaille sur une variable « fichier », celle-ci étant égale à stdin, en cas de mode interactif,
+    // et au handle du fichier passé en paramètre (ouvert avec fopen sur le handle fichier).
+    //Je lis les entrées avec une nouvelle fonction lecture(). Celle-ci utilise readline en mode interactif,
+    // et utilise fgets après un malloc en mode script.
     if (global_argc > 1) {
         tmp = malloc(152);
         lu = fgets(tmp, 150, fichier);
@@ -76,15 +81,15 @@ char *lecture() {
 
     } else {
         //lecture prompt
-        char prompt[4096];
-        prompt[0]='\0';
+        char prompt[TAILLE_BUFFER];
+        prompt[0] = '\0';
 
 
-        strcat(prompt,"\033[1;31m");
+        strcat(prompt, "\033[1;31m");
         strcat(prompt, getenv("USER"));
-        strcat(prompt,"@");
-        strcat(prompt,"hostname");
-        strcat(prompt,"\033[0m:\033[1;34m");
+        strcat(prompt, "@");
+        strcat(prompt, "hostname");
+        strcat(prompt, "\033[0m:\033[1;34m");
 
         if (strncmp(getenv("PWD"), getenv("HOME"), strlen(getenv("HOME"))) == 0) {
             char *temp_home = getenv("PWD");
@@ -100,7 +105,6 @@ char *lecture() {
         strcat(prompt, "\033[0m$ ");
 
 
-
         tmp = readline(prompt);
 
     }
@@ -109,19 +113,26 @@ char *lecture() {
 
 
 int main(int argc, char *argv[], char *arge[]) {
-
     //save le nombre d'arguments
     global_argc = argc;
 
     //init hystory
     using_history();
-    FILE *handle = fopen(".mpsh_history", "r");
-    //test si exite sinon le creer
-    if (handle == NULL) handle = fopen(".mpsh_history", "w");
+
+    char *home = getenv("HOME");
+    dir_history[0] = '\0';
+    strcat(dir_history, home);
+    strcat(dir_history, "/.mpsh_history");
+
+    //Si le fichier n'existe pas, l'historique ne pourra pas être lu et sauvegardé correctement.
+    // Je teste donc la présence de celui-ci en l'ouvrant.
+    // Si l'ouverture échoue, je crée le fichier avec fopen.
+    FILE *handle = fopen(dir_history, "r");
+    if (handle == NULL) handle = fopen(dir_history, "w");
     fclose(handle);
-    read_history(".mpsh_history");
+    read_history(dir_history);
     stifle_history(500);
-    write_history(".mpsh_history");
+    write_history(dir_history);
 
 
     //ajout des variables d'environement dans notre shell
@@ -136,10 +147,11 @@ int main(int argc, char *argv[], char *arge[]) {
 
 
     //bind key clavier pour afichage des commandes
-    rl_bind_keyseq("\e[A", touche_fleche_haute);
+    //rl_bind_keyseq("\e[A", touche_fleche_haute);
     rl_bind_key('\t', touche_tab);
     rl_bind_keyseq("\t\t", double_touche_tab);
 
+    // test si le shell a été ouvert avec un fichier script en argument
     if (argc > 1) {
         fichier = fopen(argv[1], "r");
         if (fichier == NULL) {
@@ -150,14 +162,17 @@ int main(int argc, char *argv[], char *arge[]) {
         fichier = stdin;
     }
 
+    //boucle d'interaction
     while (1) {
+
         char *ligne_saisie = lecture();
         if (ligne_saisie != NULL) {
             strcpy(buffer, ligne_saisie);
             free(ligne_saisie);
+
             if (isatty(fileno(fichier))) {
                 add_history(buffer);
-                append_history(1, ".mpsh_history");
+                append_history(1, dir_history);
             }
             traitement_ligne(argv);
         } else {

@@ -16,9 +16,9 @@ extern void traitement_espaces_fin(char *chaine_a_traiter);
 
 extern void traitement_cmd(char *commande, char **argv);
 
-extern void creation_liste_arguments(char *arguments[32], char *commande);
+extern void creation_liste_arguments(char *arguments[], char *commande);
 
-extern void liberation_arguments(char *arguments[32]);
+extern void liberation_arguments(char *arguments[]);
 
 extern void traitement_joker(char *arguments[32]);
 

@@ -1,6 +1,3 @@
-//
-// Created by chawki on 30/12/18.
-//
 
 #include "analyseur.h"
 
@@ -52,12 +49,12 @@ void traitement_espaces_fin(char *chaine_a_traiter) {
 
 //traitement d'une commande
 void traitement_cmd(char *commande, char **argv) {
-    char *cmd1, *cmd2;
+    char *cmd1, *cmd2 = NULL;
     char *fichier_redirection_sortante, *fichier_redirection_entrante;
     char *fichier_redirection_sortante2 = NULL, *fichier_redirection_entrante2 = NULL;
     int pipefd[2];
 
-    cmd2 = NULL;
+    //traitement des erreurs d'ecriture de commande si existe
     str_replace(commande, "\n", "");
     str_replace(commande, " <", "<");
     str_replace(commande, "< ", "<");
@@ -69,20 +66,36 @@ void traitement_cmd(char *commande, char **argv) {
     str_replace(commande, "| ", "|");
     str_replace(commande, " |", "|");
     str_replace(commande, "|", " | ");
-    char *tmp = strstr(commande, " | ");
-    if (tmp != NULL) {
-        cmd1 = strndup(commande, strlen(commande) - strlen(tmp));
-        cmd2 = strdup(tmp + 3);
+
+    //test if existe pip
+    char *existe_pipe = strstr(commande, " | ");
+
+    //decouper la commande en 2 commande sinon ne rien faire
+    if (existe_pipe != NULL) {
+        //decouper la commande en 2 commande sinon ne rien faire
+        cmd1 = strndup(commande, strlen(commande) - strlen(existe_pipe));
+        cmd2 = strdup(existe_pipe + 3);
     } else {
         cmd1 = strdup(commande);
     }
+
+
+    //creation de la liste des argument de la commande 1
     creation_liste_arguments(arg_list, cmd1);
+
+    //enregistrer les variables si elle existe
     gestion_variables(arg_list, argv, global_argc);
+
+    //traitement si existe etoile dans la commande
     traitement_joker(arg_list);
+
+    //traitement si il existe des redirection > ou >> ou <
     fichier_redirection_sortante = scan_redirection_sortante(arg_list);
     fichier_redirection_entrante = scan_redirection_entrante(arg_list);
 
+    //test si il existe une 2eme commande du pipe pour faire le meme traitement que la commande 1
     if (cmd2 != NULL) {
+
         creation_liste_arguments(arg_list2, cmd2);
         gestion_variables(arg_list2, argv, global_argc);
         traitement_joker(arg_list2);
@@ -91,59 +104,87 @@ void traitement_cmd(char *commande, char **argv) {
     }
 
     pipe(pipefd);
+
     pid_t process1 = fork();
+
     if (process1 == 0) {
+
         if (cmd2 != NULL) {
             dup2(pipefd[1], STDOUT_FILENO);
         }
+
         if (fichier_redirection_entrante != NULL) {
             FILE *handler = freopen(fichier_redirection_entrante, "r", stdin);
+
             if (handler == NULL) {
                 fprintf(stderr, "%s\n", strerror(errno));
-                exit(0);
+                exit(EXIT_FAILURE);
             }
         }
+
         if (fichier_redirection_sortante != NULL) {
             char *type_redirection = strndup(fichier_redirection_sortante, 1);
             FILE *handler = freopen(fichier_redirection_sortante + 1, type_redirection, stdout);
+
             if (handler == NULL) {
                 fprintf(stderr, "%s\n", strerror(errno));
-                exit(0);
+                exit(EXIT_FAILURE);
             }
+
             free(type_redirection);
         }
 
         int retour = execvp(arg_list[0], arg_list);
-        if (retour == -1) fprintf(stderr, "%s\n", strerror(errno));
-        exit(0);
+
+        if (retour == -1) {
+            fprintf(stderr, "%s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        exit(EXIT_SUCCESS);
 
     } else {
         wait(&process1);
     }
 
+    // si existe pip
     if (cmd2 != NULL) {
+
         pid_t process2 = fork();
+
         if (process2 == 0) {
+
             dup2(pipefd[0], STDIN_FILENO);
+
             if (fichier_redirection_entrante2 != NULL) {
+
                 FILE *handler = freopen(fichier_redirection_entrante2, "r", stdin);
+
                 if (handler == NULL) {
                     fprintf(stderr, "%s\n", strerror(errno));
-                    exit(0);
+                    exit(EXIT_FAILURE);
                 }
+
             }
+
             if (fichier_redirection_sortante2 != NULL) {
+
                 char *type_redirection = strndup(fichier_redirection_sortante, 1);
                 FILE *handler = freopen(fichier_redirection_sortante2 + 1, type_redirection, stdout);
+
                 if (handler == NULL) {
                     fprintf(stderr, "%s\n", strerror(errno));
-                    exit(0);
+                    exit(EXIT_FAILURE);
                 }
                 free(type_redirection);
             }
+
             int retour = execvp(arg_list2[0], arg_list2);
-            if (retour == -1) fprintf(stderr, "%s\n", strerror(errno));
-            exit(0);
+
+            if (retour == -1) {
+                fprintf(stderr, "%s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            exit(EXIT_SUCCESS);
         } else {
             //wait(&process2);
         }
@@ -192,7 +233,7 @@ void creation_liste_arguments(char *arguments[32], char *commande) {
 
 
 //vider la memoire des arguments
-void liberation_arguments(char *arguments[32]) {
+void liberation_arguments(char *arguments[TAILLE_LIST_ARGS]) {
     int increment = 0;
     while (arguments[increment] != NULL) {
         free(arguments[increment]);
@@ -201,8 +242,8 @@ void liberation_arguments(char *arguments[32]) {
 }
 
 //traitement du caractere *
-void traitement_joker(char *arguments[32]) {
-    char *arg_list_tmp[32];
+void traitement_joker(char *arguments[TAILLE_LIST_ARGS]) {
+    char *arg_list_tmp[TAILLE_LIST_ARGS];
 
     int increment = 0;
     int increment_tmp = 0;
@@ -254,6 +295,8 @@ void traitement_ligne(char **argv) {
         my_exit();
     } else if (strcmp(buffer, "?") == 0) {
 
+    } else if (strncmp(buffer, "type", 4) == 0) {
+        my_type();
     } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
     else if (strcmp(buffer, "set") == 0) {
         my_set();

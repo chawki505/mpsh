@@ -21,4 +21,6 @@ extern void my_history();
 
 extern int traitement_fichier_sh(char **argv);
 
+extern void my_type();
+
 #endif //SHELL_COMMANDES_INTERNES_H

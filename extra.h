@@ -5,7 +5,7 @@
 
 extern void ajout_environnement(char *nom_variable, char *valeur_variable);
 
-extern void gestion_variables(char *arguments[32], char **argv, int global_argc);
+extern void gestion_variables(char *arguments[], char **argv, int global_argc);
 
 extern int touche_fleche_haute();
 

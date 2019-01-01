@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <glob.h>
 #include <readline/readline.h>
@@ -16,23 +18,31 @@
 #include "extra.h"
 #include "analyseur.h"
 
+//Type de variable d'environement en liste chainé
 typedef struct Environnement {
     char *nom;
     char *valeur;
     struct Environnement *next;
 } Environnement;
 
+//liste des VE
 Environnement *var_environnement;
 
-char *arg_list[32], *arg_list2[32];
-char buffer[250];
+#define TAILLE_BUFFER 1024
+#define TAILLE_LIST_ARGS 32
+
+
+//variable global
+char *arg_list[TAILLE_LIST_ARGS], *arg_list2[TAILLE_LIST_ARGS];
+char buffer[TAILLE_BUFFER];
 int global_argc;
 FILE *fichier;
+char dir_history[TAILLE_BUFFER];
 
 
-extern char *scan_redirection_entrante(char *arguments[32]);
+extern char *scan_redirection_entrante(char *arguments[]);
 
-extern char *scan_redirection_sortante(char *arguments[32]);
+extern char *scan_redirection_sortante(char *arguments[]);
 
 
 #endif //SHELL_VARIABLES_H

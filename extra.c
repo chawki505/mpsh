@@ -38,7 +38,7 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
 }
 
 
-void gestion_variables(char *arguments[32], char **argv, int global_argc) {
+void gestion_variables(char *arguments[TAILLE_LIST_ARGS], char **argv, int global_argc) {
     int increment = 0;
 
     while (arguments[increment] != NULL) {
