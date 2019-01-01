@@ -20,7 +20,7 @@ extern void creation_liste_arguments(char *arguments[], char *commande);
 
 extern void liberation_arguments(char *arguments[]);
 
-extern void traitement_joker(char *arguments[32]);
+extern void traitement_joker(char *arguments[]);
 
 extern void traitement_ligne(char **argv);
 

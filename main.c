@@ -144,6 +144,11 @@ int main(int argc, char *argv[], char *arge[]) {
         free(nom);
         ++increment;
     }
+    ajout_environnement("?", "0");
+    gethostname(hostname, TAILLE_BUFFER);
+    ajout_environnement("HOSTNAME",hostname);
+
+
 
 
     //bind key clavier pour afichage des commandes
@@ -176,7 +181,7 @@ int main(int argc, char *argv[], char *arge[]) {
             }
             traitement_ligne(argv);
         } else {
-            exit(0);
+            exit(EXIT_SUCCESS);
         }
     }
 }

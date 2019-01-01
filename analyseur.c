@@ -84,7 +84,7 @@ void traitement_cmd(char *commande, char **argv) {
     creation_liste_arguments(arg_list, cmd1);
 
     //enregistrer les variables si elle existe
-    gestion_variables(arg_list, argv, global_argc);
+    gestion_variables(arg_list, argv);
 
     //traitement si existe etoile dans la commande
     traitement_joker(arg_list);
@@ -97,7 +97,7 @@ void traitement_cmd(char *commande, char **argv) {
     if (cmd2 != NULL) {
 
         creation_liste_arguments(arg_list2, cmd2);
-        gestion_variables(arg_list2, argv, global_argc);
+        gestion_variables(arg_list2, argv);
         traitement_joker(arg_list2);
         fichier_redirection_sortante2 = scan_redirection_sortante(arg_list2);
         fichier_redirection_entrante2 = scan_redirection_entrante(arg_list2);

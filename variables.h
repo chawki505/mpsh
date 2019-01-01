@@ -18,13 +18,22 @@
 #include "extra.h"
 #include "analyseur.h"
 
-//Type de variable d'environement en liste chainé
+//Type de variable d'environement
 typedef struct Environnement {
     char *nom;
     char *valeur;
     struct Environnement *next;
 } Environnement;
 
+//Type alias
+typedef struct Alias {
+    char *nom;
+    char *valeur;
+    struct Alias *next;
+} Alias;
+
+//liste des VE
+Alias *alias;
 //liste des VE
 Environnement *var_environnement;
 
@@ -38,6 +47,8 @@ char buffer[TAILLE_BUFFER];
 int global_argc;
 FILE *fichier;
 char dir_history[TAILLE_BUFFER];
+char hostname[TAILLE_BUFFER];
+
 
 
 extern char *scan_redirection_entrante(char *arguments[]);

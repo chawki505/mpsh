@@ -1,7 +1,47 @@
 #include "extra.h"
 
 
+//parcour la list des VE et ajoute ou modifier la variable
 void ajout_environnement(char *nom_variable, char *valeur_variable) {
+    Environnement *liste = var_environnement;
+    int test = 0;
+
+    if (liste != NULL) {
+        while (liste->next != NULL) {
+            if (strcmp(nom_variable, liste->nom) == 0) {
+                free(liste->valeur);
+                liste->valeur = strdup(valeur_variable);
+                test = 1;
+            }
+            liste = liste->next;
+        }
+    }
+
+    //cas VR non trouver
+    if (test == 0) {
+        Environnement *new_env = malloc(sizeof(Environnement));
+
+        new_env->nom = strdup(nom_variable);
+        new_env->valeur = strdup(valeur_variable);
+        new_env->next = NULL;
+
+        liste = var_environnement;
+
+
+        if (liste != NULL) {
+
+            while (liste->next != NULL) {
+                liste = liste->next;
+            }
+            liste->next = new_env;
+
+        } else {
+            var_environnement = new_env;
+        }
+    }
+}
+
+void ajout_alias(char *nom_variable, char *valeur_variable) {
     Environnement *liste = var_environnement;
     int test = 0;
 
@@ -38,24 +78,32 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
 }
 
 
-void gestion_variables(char *arguments[TAILLE_LIST_ARGS], char **argv, int global_argc) {
+//gestion des variable dans un fichier script.sh
+void gestion_variables(char *arguments[TAILLE_LIST_ARGS], char **argv) {
     int increment = 0;
 
     while (arguments[increment] != NULL) {
         char *chaine_a_scanner = arguments[increment];
+
         if (chaine_a_scanner[0] == '$') {
+
             int detection = 0;
             char *endptr = NULL;
             long entier = strtol(arguments[increment] + 1, &endptr, 10);
             if (strcmp(endptr, "") != 0) entier = -1;
+
             if (entier != -1) {
+
                 if (entier + 1 <= global_argc) {
                     free(arguments[increment]);
                     arguments[increment] = strdup(argv[entier]);
                     detection = 1;
                 }
+
             } else {
+
                 Environnement *liste = var_environnement;
+
                 while (liste != NULL) {
                     if (strcmp(liste->nom, chaine_a_scanner + 1) == 0) {
                         free(arguments[increment]);
@@ -65,11 +113,13 @@ void gestion_variables(char *arguments[TAILLE_LIST_ARGS], char **argv, int globa
                     liste = liste->next;
                 }
             }
+
             if (detection == 0) {
                 free(arguments[increment]);
                 arguments[increment] = strdup("");
             }
         }
+
         ++increment;
     }
 }

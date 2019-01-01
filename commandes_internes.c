@@ -70,7 +70,7 @@ void my_type() {
         if (is_cmd_in(cmd) == 0) {
             printf("type : %s is a shell builtin\n", cmd);
         } else {
-
+            printf("type : %s is a .......\n", cmd);
         }
     } else {
         // fprintf(stderr, "type : %s", strerror(errno));
@@ -138,15 +138,19 @@ void my_get_cmd_history(char **argv) {
 void my_export() {
     char *nom_variable = strstr(buffer, " ");
     if (nom_variable != NULL) {
+
         char *valeur_variable = NULL;
         Environnement *liste = var_environnement;
+
         while (liste != NULL) {
             if (strcmp(nom_variable + 1, liste->nom) == 0) {
                 valeur_variable = liste->valeur;
                 liste = NULL;
                 setenv(nom_variable + 1, valeur_variable, 1);
             }
-            if (liste != NULL) liste = liste->next;
+            if (liste != NULL) {
+                liste = liste->next;
+            }
         }
     }
 }
@@ -185,6 +189,7 @@ void my_set() {
 
 
 //TODO: umask fonction
+/*
 void my_umask() {
     char num[4];
     long n1, n2, n3, flag = 0, n;
@@ -196,7 +201,7 @@ void my_umask() {
         size_t longueur_value = strcspn(tmp + 1, " ");
         value = strndup(tmp + 1, longueur_value);
 
-        if ((int) value > 3) {
+        if ( value > 3) {
             fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
             return;
         } else {
@@ -222,6 +227,7 @@ void my_umask() {
 
 
 }
+*/
 
 
 //methode de la commande exit
@@ -272,7 +278,7 @@ int traitement_fichier_sh(char **argv) {
         arg_list_temp[0] = strndup(formule, retour);
         arg_list_temp[1] = strdup(formule + retour + 1);
         arg_list_temp[2] = NULL;
-        gestion_variables(arg_list_temp, argv, global_argc);
+        gestion_variables(arg_list_temp, argv);
         int test = strcmp(arg_list_temp[0], arg_list_temp[1]);
         free(arg_list_temp[1]);
         free(arg_list_temp[0]);
