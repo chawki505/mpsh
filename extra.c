@@ -12,6 +12,8 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
                 free(liste->valeur);
                 liste->valeur = strdup(valeur_variable);
                 test = 1;
+                setenv(liste->nom,liste->valeur,0);
+
             }
             liste = liste->next;
         }
@@ -26,6 +28,7 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
         new_env->next = NULL;
 
         liste = var_environnement;
+        setenv(new_env->nom,new_env->valeur,0);
 
 
         if (liste != NULL) {
@@ -78,7 +81,7 @@ void ajout_alias(char *nom_variable, char *valeur_variable) {
 }
 
 
-//gestion des variable dans un fichier script.sh
+//gestion des variable d'environement
 void gestion_variables(char *arguments[TAILLE_LIST_ARGS], char **argv) {
     int increment = 0;
 

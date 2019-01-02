@@ -56,13 +56,17 @@ void traitement_cmd(char *commande, char **argv) {
 
     //traitement des erreurs d'ecriture de commande si existe
     str_replace(commande, "\n", "");
-    str_replace(commande, " <", "<");
-    str_replace(commande, "< ", "<");
-    str_replace(commande, "<", " < ");
-    str_replace(commande, " >", ">");
-    str_replace(commande, "> ", ">");
-    str_replace(commande, ">", " > ");
-    str_replace(commande, " >  > ", " >> ");
+
+    //str_replace(commande, " <", "<");
+    //str_replace(commande, "< ", "<");
+    //str_replace(commande, "<", " < ");
+
+    //str_replace(commande, " >", ">");
+    //str_replace(commande, "> ", ">");
+    //str_replace(commande, ">", " > ");
+
+
+    //str_replace(commande, " >  > ", " >> ");
     str_replace(commande, "| ", "|");
     str_replace(commande, " |", "|");
     str_replace(commande, "|", " | ");
@@ -83,10 +87,10 @@ void traitement_cmd(char *commande, char **argv) {
     //creation de la liste des argument de la commande 1
     creation_liste_arguments(arg_list, cmd1);
 
-    //enregistrer les variables si elle existe
+    //enregistrer les variables si elle existe dans la ligne de commande
     gestion_variables(arg_list, argv);
 
-    //traitement si existe etoile dans la commande
+    //traitement si existe etoile dans la commande (eg. ls *.c)
     traitement_joker(arg_list);
 
     //traitement si il existe des redirection > ou >> ou <
@@ -95,7 +99,6 @@ void traitement_cmd(char *commande, char **argv) {
 
     //test si il existe une 2eme commande du pipe pour faire le meme traitement que la commande 1
     if (cmd2 != NULL) {
-
         creation_liste_arguments(arg_list2, cmd2);
         gestion_variables(arg_list2, argv);
         traitement_joker(arg_list2);
@@ -106,6 +109,7 @@ void traitement_cmd(char *commande, char **argv) {
     pipe(pipefd);
 
     pid_t process1 = fork();
+    int status1;
 
     if (process1 == 0) {
 
@@ -124,7 +128,16 @@ void traitement_cmd(char *commande, char **argv) {
 
         if (fichier_redirection_sortante != NULL) {
             char *type_redirection = strndup(fichier_redirection_sortante, 1);
-            FILE *handler = freopen(fichier_redirection_sortante + 1, type_redirection, stdout);
+            FILE *handler = NULL;
+
+            if (redirection_err == 1) {
+                handler = freopen(fichier_redirection_sortante + 1, type_redirection, stderr);
+                redirection_err = 0;
+
+            } else {
+                handler = freopen(fichier_redirection_sortante + 1, type_redirection, stdout);
+            }
+
 
             if (handler == NULL) {
                 fprintf(stderr, "%s\n", strerror(errno));
@@ -137,19 +150,32 @@ void traitement_cmd(char *commande, char **argv) {
         int retour = execvp(arg_list[0], arg_list);
 
         if (retour == -1) {
-            fprintf(stderr, "%s\n", strerror(errno));
+            fprintf(stderr, "%s : %s\n", *arg_list, strerror(errno));
             exit(EXIT_FAILURE);
         }
         exit(EXIT_SUCCESS);
-
-    } else {
-        wait(&process1);
     }
+
+
+    //wait(&process1);
+    if (waitpid(process1, &status1, 0) == -1) {
+        perror("waitpid failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (WIFEXITED(status1)) {
+        const int es = WEXITSTATUS(status1);
+        char ess[10];
+        snprintf(ess,10, "%d", es);
+        ajout_environnement("?", ess);
+    }
+
 
     // si existe pip
     if (cmd2 != NULL) {
 
         pid_t process2 = fork();
+        int status2;
 
         if (process2 == 0) {
 
@@ -163,13 +189,18 @@ void traitement_cmd(char *commande, char **argv) {
                     fprintf(stderr, "%s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
-
             }
 
             if (fichier_redirection_sortante2 != NULL) {
 
                 char *type_redirection = strndup(fichier_redirection_sortante, 1);
-                FILE *handler = freopen(fichier_redirection_sortante2 + 1, type_redirection, stdout);
+                FILE *handler = NULL;
+                if (redirection_err == 1) {
+                    handler = freopen(fichier_redirection_sortante2 + 1, type_redirection, stderr);
+                    redirection_err = 0;
+                } else {
+                    handler = freopen(fichier_redirection_sortante2 + 1, type_redirection, stdout);
+                }
 
                 if (handler == NULL) {
                     fprintf(stderr, "%s\n", strerror(errno));
@@ -181,13 +212,26 @@ void traitement_cmd(char *commande, char **argv) {
             int retour = execvp(arg_list2[0], arg_list2);
 
             if (retour == -1) {
+                fprintf(stderr, "%s", *argv);
                 fprintf(stderr, "%s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
             exit(EXIT_SUCCESS);
-        } else {
-            //wait(&process2);
         }
+        //wait(&process2);
+
+        if (waitpid(process2, &status2, 0) == -1) {
+            perror("waitpid failed");
+            exit(EXIT_FAILURE);
+        }
+
+        if (WIFEXITED(status2)) {
+            const int es = WEXITSTATUS(status2);
+            char ess[10];
+            snprintf(ess,10, "%d", es);
+            ajout_environnement("?", ess);
+        }
+
     }
 
 
@@ -209,7 +253,7 @@ void creation_liste_arguments(char *arguments[32], char *commande) {
     int boucle, increment;
     size_t longueur;
 
-    for (boucle = 0; boucle < 32; ++boucle) {
+    for (boucle = 0; boucle < TAILLE_LIST_ARGS; ++boucle) {
         arguments[boucle] = NULL;
     }
 
@@ -293,8 +337,6 @@ void traitement_ligne(char **argv) {
         my_cd();
     } else if (strcmp(buffer, "exit") == 0) {
         my_exit();
-    } else if (strcmp(buffer, "?") == 0) {
-
     } else if (strncmp(buffer, "type", 4) == 0) {
         my_type();
     } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
@@ -310,17 +352,27 @@ void traitement_ligne(char **argv) {
         my_history();
     } else if (strncmp(buffer, "exit", 4) == 0) {
         my_exit();
+        // } else if (strncmp(buffer, "$", 1) == 0) {
+        //   char *nom_variable = strstr(buffer, "$");
+        // char *valleur_variable = getenv(nom_variable+1);
+        // printf("%s",valleur_variable);
+
+
     } else {
         //traitement des commandes externes
         char *cmd = strdup(buffer);
         char *tmp = strtok(cmd, ";");
         while (tmp != NULL) {
+
             char *valeur_var = strstr(tmp, "=");
+
             if (valeur_var != NULL) {
                 char *nom_var = strndup(tmp, strlen(tmp) - strlen(valeur_var));
                 ajout_environnement(nom_var, valeur_var + 1);
                 free(nom_var);
-            } else traitement_cmd(tmp, argv);
+            } else {
+                traitement_cmd(tmp, argv);
+            }
             tmp = strtok(NULL, ";");
         }
         free(cmd);

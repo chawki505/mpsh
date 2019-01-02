@@ -27,7 +27,23 @@ char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
     int increment = 0;
 
     while (arguments[increment] != NULL) {
+
         if (strcmp(arguments[increment], ">") == 0) {
+            redirection = malloc(strlen(arguments[increment + 1]) + 1);
+            redirection[0] = 'w';
+            redirection[1] = '\0';
+            strcat(redirection, arguments[increment + 1]);
+            free(arguments[increment]);
+            free(arguments[increment + 1]);
+
+            while (arguments[increment + 2] != NULL) {
+                arguments[increment] = arguments[increment + 2];
+                ++increment;
+            }
+            arguments[increment] = NULL;
+        } else if (strcmp(arguments[increment], "2>") == 0) {
+
+            redirection_err = 1;
             redirection = malloc(strlen(arguments[increment + 1]) + 1);
             redirection[0] = 'w';
             redirection[1] = '\0';
@@ -39,7 +55,10 @@ char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
                 ++increment;
             }
             arguments[increment] = NULL;
+
+
         } else if (strcmp(arguments[increment], ">>") == 0) {
+
             redirection = malloc(strlen(arguments[increment + 1]) + 1);
             redirection[0] = 'a';
             redirection[1] = '\0';
@@ -88,7 +107,7 @@ char *lecture() {
         strcat(prompt, "\033[1;31m");
         strcat(prompt, getenv("USER"));
         strcat(prompt, "@");
-        strcat(prompt, "hostname");
+        strcat(prompt, getenv("HOSTNAME"));
         strcat(prompt, "\033[0m:\033[1;34m");
 
         if (strncmp(getenv("PWD"), getenv("HOME"), strlen(getenv("HOME"))) == 0) {
@@ -101,12 +120,8 @@ char *lecture() {
             strcat(prompt, getenv("PWD"));
         }
 
-
         strcat(prompt, "\033[0m$ ");
-
-
         tmp = readline(prompt);
-
     }
     return tmp;
 }
@@ -146,7 +161,7 @@ int main(int argc, char *argv[], char *arge[]) {
     }
     ajout_environnement("?", "0");
     gethostname(hostname, TAILLE_BUFFER);
-    ajout_environnement("HOSTNAME",hostname);
+    ajout_environnement("HOSTNAME", hostname);
 
 
 
@@ -170,6 +185,7 @@ int main(int argc, char *argv[], char *arge[]) {
     //boucle d'interaction
     while (1) {
 
+        redirection_err = 0;
         char *ligne_saisie = lecture();
         if (ligne_saisie != NULL) {
             strcpy(buffer, ligne_saisie);

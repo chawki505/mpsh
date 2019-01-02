@@ -27,7 +27,7 @@ echo \$SCHTROUMPF
 echo \$GARGAMEL
 exit
 " > /tmp/schtroumpf_$USER
-    $1 < /tmp/schtroumpf_$USER > /tmp/rep_$USER.$1 2>/tmp/err_$USER.$1
+    $1 < /tmp/schtroumpf_$USER > /tmp/rep_$USER.$1 2> /tmp/err_$USER.$1
     echo "rmdir Azrael" > /tmp/schtroumpf_$USER
     bash < /tmp/schtroumpf_$USER
 }

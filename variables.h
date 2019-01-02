@@ -48,6 +48,7 @@ int global_argc;
 FILE *fichier;
 char dir_history[TAILLE_BUFFER];
 char hostname[TAILLE_BUFFER];
+int redirection_err;
 
 
 
