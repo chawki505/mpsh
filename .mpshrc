@@ -1,6 +1,6 @@
 #set PATH so it includes user's private bin directories
 
-CHEMIN=/$HOME/bin:/$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+CHEMIN=~/bin//:/bin
 
 #historique
 #correspondant au nombre de commandes d'historique potentiellement en mémoire

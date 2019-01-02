@@ -50,11 +50,10 @@ void lecture_mpshrc(char **arge) {
 
             if (valeur_var != NULL) {
                 char *nom_var = strndup(var, strlen(var) - strlen(valeur_var));
-                //traitement si il existe des var dans la var
+                //TODO:traitement si il existe des var dans la valeur de var
                 add_environnement(nom_var, valeur_var + 1);
                 free(nom_var);
             } else {
-                //traitement_commande(var, arge);
             }
             free(var);
         }
