@@ -1,10 +1,16 @@
 #include "extra.h"
 
 
-//parcour la list des VE et ajoute ou modifier la variable
+//parcour la list des VE et ajoute ou modifier la variable VE
 void ajout_environnement(char *nom_variable, char *valeur_variable) {
     Environnement *liste = var_environnement;
     int test = 0;
+
+
+    if (strncmp(valeur_variable, "$", 1) == 0) {
+        valeur_variable = strdup(get_ve_value(valeur_variable + 1));
+    }
+
 
     if (liste != NULL) {
         while (liste->next != NULL) {
@@ -12,8 +18,7 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
                 free(liste->valeur);
                 liste->valeur = strdup(valeur_variable);
                 test = 1;
-                setenv(liste->nom,liste->valeur,0);
-
+                setenv(liste->nom, liste->valeur, 0);
             }
             liste = liste->next;
         }
@@ -28,11 +33,10 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
         new_env->next = NULL;
 
         liste = var_environnement;
-        setenv(new_env->nom,new_env->valeur,0);
+        setenv(new_env->nom, new_env->valeur, 0);
 
 
         if (liste != NULL) {
-
             while (liste->next != NULL) {
                 liste = liste->next;
             }
@@ -44,38 +48,64 @@ void ajout_environnement(char *nom_variable, char *valeur_variable) {
     }
 }
 
-void ajout_alias(char *nom_variable, char *valeur_variable) {
+
+//methode qui donne la valeur d'une variable e.
+char *get_ve_value(char *nom_variable) {
     Environnement *liste = var_environnement;
-    int test = 0;
 
     if (liste != NULL) {
         while (liste->next != NULL) {
             if (strcmp(nom_variable, liste->nom) == 0) {
-                free(liste->valeur);
-                liste->valeur = strdup(valeur_variable);
-                test = 1;
+                return liste->valeur;
             }
             liste = liste->next;
         }
     }
 
-    if (test == 0) {
-        Environnement *new_env = malloc(sizeof(Environnement));
+    return nom_variable;
+}
 
-        new_env->nom = strdup(nom_variable);
-        new_env->valeur = strdup(valeur_variable);
-        new_env->next = NULL;
 
-        liste = var_environnement;
+//methode pour test si un alias exist deja
+Alias *exist_alias(char *nom_variable) {
+    Alias *liste = alias_list;
 
+    while (liste != NULL) {
+
+        if (strcmp(nom_variable, liste->nom) == 0) {
+            return liste;
+        }
+        liste = liste->next;
+    }
+    return NULL;
+}
+
+void ajout_alias(char *nom_variable, char *valeur_variable) {
+    Alias *liste = alias_list;
+    Alias *tmp;
+
+    //si alias exite alors modifier la valeur
+    tmp = exist_alias(nom_variable);
+    if (tmp != NULL) {
+        free(tmp->valeur);
+        tmp->valeur = strdup(valeur_variable);
+    }
+        //cas list vide ou pas trouver dans la liste
+    else {
+        Alias *new_alias = malloc(sizeof(Alias));
+        new_alias->nom = strdup(nom_variable);
+        new_alias->valeur = strdup(valeur_variable);
+        new_alias->next = NULL;
 
         if (liste != NULL) {
+
+            //parcourir la list si non vide sinon retourné l'element
             while (liste->next != NULL) {
                 liste = liste->next;
             }
-            liste->next = new_env;
+            liste->next = new_alias;
         } else {
-            var_environnement = new_env;
+            alias_list = new_alias;
         }
     }
 }
@@ -133,6 +163,10 @@ int touche_fleche_haute() {
     rl_replace_line(historique->line, 0);
     rl_end_of_line(0, 0);
     return 0;
+}
+
+int touche_ctrl_c() {
+    exit(EXIT_FAILURE);
 }
 
 int touche_tab() {

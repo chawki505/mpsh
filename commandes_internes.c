@@ -162,21 +162,76 @@ void my_export() {
 // je n'ai donc pas besoin de m'assurer que la variable à supprimer est dans l'environnement.
 void my_unset() {
     char *nom_variable = strstr(buffer, " ");
-    unsetenv(nom_variable + 1);
-    Environnement *liste = var_environnement;
-    Environnement *precedent = NULL;
-    while (liste != NULL) {
-        if (strcmp(nom_variable + 1, liste->nom) == 0) {
-            free(liste->valeur);
-            free(liste->nom);
-            precedent->next = liste->next;
-            free(liste);
-            liste = NULL;
+    if (nom_variable != NULL) {
+        unsetenv(nom_variable + 1);
+        Environnement *liste = var_environnement;
+        Environnement *precedent = NULL;
+        while (liste != NULL) {
+            if (strcmp(nom_variable + 1, liste->nom) == 0) {
+                free(liste->valeur);
+                free(liste->nom);
+                precedent->next = liste->next;
+                free(liste);
+                liste = NULL;
+            }
+            precedent = liste;
+            if (liste != NULL) liste = liste->next;
         }
-        precedent = liste;
-        if (liste != NULL) liste = liste->next;
     }
 }
+
+
+//La commande alias_list ajoute ou modifie un alias_list
+void my_alias() {
+
+    char *var = strdup(buffer);
+    var = strstr(var, " ");
+
+    if (var != NULL) {
+        char *valeur_variable = strstr(var, "=");
+        if (valeur_variable != NULL) {
+            char *nom_var = strndup(var + 1, strlen(var + 1) - strlen(valeur_variable));
+            ajout_alias(nom_var, valeur_variable + 1);
+            free(nom_var);
+        }
+    } else {
+        Alias *liste = alias_list;
+        while (liste != NULL) {
+            printf("Alias : %s=%s\n", liste->nom, liste->valeur);
+            liste = liste->next;
+        }
+    }
+}
+
+//La commande unalias supprime un alias_list
+void my_unalias() {
+    char *nom_variable = strstr(buffer, " ");
+    if (nom_variable != NULL) {
+        Alias *courant = alias_list;
+        Alias *precedent = NULL;
+
+        while (courant != NULL) {
+            if (strcmp(nom_variable + 1, courant->nom) == 0) {
+                free(courant->valeur);
+                free(courant->nom);
+                if (precedent != NULL) {
+                    precedent->next = courant->next;
+                    free(courant);
+                }
+                //cas supression debut
+                else{
+                    precedent = courant->next;
+                    free(courant);
+                    alias_list=precedent;
+                }
+            } else {
+                precedent = courant;
+                courant = courant->next;
+            }
+        }
+    }
+}
+
 
 //methode de la commande set liste les variables du shell. Son traitement s'effectue dans la fonction traitement_ligne.
 void my_set() {

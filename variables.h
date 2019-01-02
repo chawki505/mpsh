@@ -25,7 +25,7 @@ typedef struct Environnement {
     struct Environnement *next;
 } Environnement;
 
-//Type alias
+//Type alias_list
 typedef struct Alias {
     char *nom;
     char *valeur;
@@ -33,22 +33,34 @@ typedef struct Alias {
 } Alias;
 
 //liste des VE
-Alias *alias;
+Alias *alias_list;
 //liste des VE
 Environnement *var_environnement;
 
 #define TAILLE_BUFFER 1024
 #define TAILLE_LIST_ARGS 32
 
+//VE important
+char CHEMIN[TAILLE_BUFFER];
+char *INVITE;
+char *USER;
+char HOSTNAME[TAILLE_BUFFER];
+char *HOME;
+char HISTFILE[TAILLE_BUFFER];
+char HISTSIZE[TAILLE_BUFFER];
+char HISTFILESIZE[TAILLE_BUFFER];
+char dir_history[TAILLE_BUFFER];
+char dir_mpshrc[TAILLE_BUFFER];
+
+
 
 //variable global
 char *arg_list[TAILLE_LIST_ARGS], *arg_list2[TAILLE_LIST_ARGS];
 char buffer[TAILLE_BUFFER];
+
 int global_argc;
-FILE *fichier;
-char dir_history[TAILLE_BUFFER];
-char hostname[TAILLE_BUFFER];
 int redirection_err;
+FILE *fichier;
 
 
 

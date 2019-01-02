@@ -78,6 +78,60 @@ char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
 
 
 //methode de l'ecture de l'entré du shell
+void lecture_mpshrc(char **arge) {
+    char *line = NULL;
+    FILE *file = fopen(dir_mpshrc, "r");
+    if (file == NULL) exit(EXIT_FAILURE);
+    line = malloc(512);
+
+
+    while (1) {
+
+        if (fgets(line, 510, file) == NULL) break;
+
+        if (line[strlen(line) - 1] == '\n') {
+            line[strlen(line) - 1] = '\0';
+        }
+        traitement_espaces_debut(line);
+        traitement_espaces_fin(line);
+
+
+        if (line[0] == '#') {
+
+        } else if (strncmp(line, "alias", 5) == 0) {
+//            //traitement de la ligne
+//            char *var = strdup(line);
+//            str_replace(var, "alias_list ", "");
+//            //traitement de la ligne
+//            char *var_cmd = strdup(var);
+//            char *cmd = strstr(var_cmd, "=");
+//
+//            if (cmd != NULL) {
+//                char *nom_var = strndup(var_cmd, strlen(var_cmd) - strlen(cmd));
+//                //ajout_alias(nom_var, valeur_var + 1);
+//                free(nom_var);
+
+        } else {
+            //traitement de la ligne
+            char *var = strdup(line);
+            char *valeur_var = strstr(var, "=");
+
+            if (valeur_var != NULL) {
+                char *nom_var = strndup(var, strlen(var) - strlen(valeur_var));
+                ajout_environnement(nom_var, valeur_var + 1);
+                printf("%s\n", var);
+                free(nom_var);
+            } else {
+                //traitement_cmd(var, arge);
+            }
+            free(var);
+        }
+    }
+
+}
+
+
+//methode de l'ecture de l'entré du shell
 char *lecture() {
     char *tmp = NULL;
     char *lu = NULL;
@@ -127,27 +181,20 @@ char *lecture() {
 }
 
 
-int main(int argc, char *argv[], char *arge[]) {
-    //save le nombre d'arguments
-    global_argc = argc;
+void init_ve(char **arge) {
 
-    //init hystory
-    using_history();
+    HOME = getenv("HOME");
+    USER = getenv("USER");
 
-    char *home = getenv("HOME");
+    gethostname(HOSTNAME, TAILLE_BUFFER);
+
     dir_history[0] = '\0';
-    strcat(dir_history, home);
+    strcat(dir_history, HOME);
     strcat(dir_history, "/.mpsh_history");
 
-    //Si le fichier n'existe pas, l'historique ne pourra pas être lu et sauvegardé correctement.
-    // Je teste donc la présence de celui-ci en l'ouvrant.
-    // Si l'ouverture échoue, je crée le fichier avec fopen.
-    FILE *handle = fopen(dir_history, "r");
-    if (handle == NULL) handle = fopen(dir_history, "w");
-    fclose(handle);
-    read_history(dir_history);
-    stifle_history(500);
-    write_history(dir_history);
+    dir_mpshrc[0] = '\0';
+    strcat(dir_mpshrc, HOME);
+    strcat(dir_mpshrc, "/.mpshrc");
 
 
     //ajout des variables d'environement dans notre shell
@@ -160,9 +207,30 @@ int main(int argc, char *argv[], char *arge[]) {
         ++increment;
     }
     ajout_environnement("?", "0");
-    gethostname(hostname, TAILLE_BUFFER);
-    ajout_environnement("HOSTNAME", hostname);
+    ajout_environnement("HOSTNAME", HOSTNAME);
 
+    lecture_mpshrc(arge);
+}
+
+
+int main(int argc, char *argv[], char *arge[]) {
+    //save le nombre d'arguments
+    global_argc = argc;
+
+    init_ve(arge);
+
+    //init hystory
+    using_history();
+
+    //Si le fichier n'existe pas, l'historique ne pourra pas être lu et sauvegardé correctement.
+    // Je teste donc la présence de celui-ci en l'ouvrant.
+    // Si l'ouverture échoue, je crée le fichier avec fopen.
+    FILE *handle = fopen(dir_history, "r");
+    if (handle == NULL) handle = fopen(dir_history, "w");
+    fclose(handle);
+    read_history(dir_history);
+    stifle_history(500);
+    write_history(dir_history);
 
 
 

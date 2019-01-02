@@ -23,4 +23,8 @@ extern int traitement_fichier_sh(char **argv);
 
 extern void my_type();
 
+extern void my_alias();
+
+extern void my_unalias();
+
 #endif //SHELL_COMMANDES_INTERNES_H

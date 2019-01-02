@@ -1,6 +1,6 @@
 #set PATH so it includes user's private bin directories
 
-export CHEMIN="$HOME/bin:$HOME/.local/bin:$PATH"
+CHEMIN=/home/chawki/bin:/home/chawki/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 
 #historique
 #correspondant au nombre de commandes d'historique potentiellement en mémoire
@@ -13,12 +13,12 @@ HISTFILESIZE=2000
 
 #contient le nom du fichier stockant l'historique
 
-HISTFILE=".mpsh_history"
+HISTFILE=.mpsh_history
 
 #style invite de commande
-INVITE="\033[1;31m$USER@$HOSTNAME\033[0m:\033[1;34m$PWD\033[0m$"
+INVITE=\033[1;31m$USER@$HOSTNAME\033[0m:\033[1;34m$PWD\033[0m$
 
 #aliases
-#alias ll='ls -alF'
-#alias la='ls -A'
-#alias l='ls -CF'
+#alias_list ll='ls -alF'
+#alias_list la='ls -A'
+#alias_list l='ls -CF'

@@ -1,3 +1,3 @@
 
-echo apres boucle
+echo $HOSTNAME
 echo fin script

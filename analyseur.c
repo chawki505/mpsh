@@ -60,16 +60,13 @@ void traitement_cmd(char *commande, char **argv) {
     //str_replace(commande, " <", "<");
     //str_replace(commande, "< ", "<");
     //str_replace(commande, "<", " < ");
-
     //str_replace(commande, " >", ">");
     //str_replace(commande, "> ", ">");
     //str_replace(commande, ">", " > ");
-
-
     //str_replace(commande, " >  > ", " >> ");
-    str_replace(commande, "| ", "|");
-    str_replace(commande, " |", "|");
-    str_replace(commande, "|", " | ");
+    //str_replace(commande, "| ", "|");
+    //str_replace(commande, " |", "|");
+    //str_replace(commande, "|", " | ");
 
     //test if existe pip
     char *existe_pipe = strstr(commande, " | ");
@@ -106,15 +103,16 @@ void traitement_cmd(char *commande, char **argv) {
         fichier_redirection_entrante2 = scan_redirection_entrante(arg_list2);
     }
 
+
     pipe(pipefd);
-
     pid_t process1 = fork();
-    int status1;
 
+    int status1;
     if (process1 == 0) {
 
         if (cmd2 != NULL) {
-            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[0]); /* close the read side */
+            dup2(pipefd[1], STDOUT_FILENO); /* connect the write side with stdout */
         }
 
         if (fichier_redirection_entrante != NULL) {
@@ -166,7 +164,7 @@ void traitement_cmd(char *commande, char **argv) {
     if (WIFEXITED(status1)) {
         const int es = WEXITSTATUS(status1);
         char ess[10];
-        snprintf(ess,10, "%d", es);
+        snprintf(ess, 10, "%d", es);
         ajout_environnement("?", ess);
     }
 
@@ -178,8 +176,9 @@ void traitement_cmd(char *commande, char **argv) {
         int status2;
 
         if (process2 == 0) {
-
-            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[1]); /* close the unused write side */
+            dup2(pipefd[0], STDIN_FILENO); /* connect the read side with stdin */
+            close(pipefd[0]); /* close the read side */
 
             if (fichier_redirection_entrante2 != NULL) {
 
@@ -220,6 +219,9 @@ void traitement_cmd(char *commande, char **argv) {
         }
         //wait(&process2);
 
+        close(pipefd[0]);
+        close(pipefd[1]);
+
         if (waitpid(process2, &status2, 0) == -1) {
             perror("waitpid failed");
             exit(EXIT_FAILURE);
@@ -228,7 +230,7 @@ void traitement_cmd(char *commande, char **argv) {
         if (WIFEXITED(status2)) {
             const int es = WEXITSTATUS(status2);
             char ess[10];
-            snprintf(ess,10, "%d", es);
+            snprintf(ess, 10, "%d", es);
             ajout_environnement("?", ess);
         }
 
@@ -339,6 +341,10 @@ void traitement_ligne(char **argv) {
         my_exit();
     } else if (strncmp(buffer, "type", 4) == 0) {
         my_type();
+    } else if (strncmp(buffer, "alias", 5) == 0) {
+        my_alias();
+    } else if (strncmp(buffer, "unalias", 7) == 0) {
+        my_unalias();
     } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
     else if (strcmp(buffer, "set") == 0) {
         my_set();
@@ -356,10 +362,8 @@ void traitement_ligne(char **argv) {
         //   char *nom_variable = strstr(buffer, "$");
         // char *valleur_variable = getenv(nom_variable+1);
         // printf("%s",valleur_variable);
-
-
     } else {
-        //traitement des commandes externes
+        //traitement des commandes externes ou ajout des variable E
         char *cmd = strdup(buffer);
         char *tmp = strtok(cmd, ";");
         while (tmp != NULL) {
