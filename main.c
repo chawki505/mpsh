@@ -79,13 +79,13 @@ char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
 
 //methode de l'ecture de l'entré du shell
 void lecture_mpshrc(char **arge) {
-    char *line = NULL;
-    FILE *file = fopen(dir_mpshrc, "r");
-    if (file == NULL) exit(EXIT_FAILURE);
-    line = malloc(512);
+    //char *line = NULL;
+    //FILE *file = fopen(dir_mpshrc, "r");
+    //if (file == NULL) exit(EXIT_FAILURE);
+    //line = malloc(512);
 
 
-    while (1) {
+    /*while (1) {
 
         if (fgets(line, 510, file) == NULL) break;
 
@@ -126,7 +126,7 @@ void lecture_mpshrc(char **arge) {
             }
             free(var);
         }
-    }
+    }*/
 
 }
 
@@ -209,7 +209,7 @@ void init_ve(char **arge) {
     ajout_environnement("?", "0");
     ajout_environnement("HOSTNAME", HOSTNAME);
 
-    lecture_mpshrc(arge);
+   // lecture_mpshrc(arge);
 }
 
 
