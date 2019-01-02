@@ -1,54 +1,24 @@
 
 #include "commandes_internes.h"
 
-//methode de la commande cd
-void my_cd() {
-    char *dossier = NULL;
-    char *chemin = strstr(buffer, " ");
-
-
-    if (chemin != NULL) {
-        size_t longueur_chemin = strcspn(chemin + 1, " ");
-        dossier = strndup(chemin + 1, longueur_chemin);
-    } else {
-        dossier = getenv("HOME");
-    }
-
-    int retour = chdir(dossier);
-
-    if (retour != 0) {
-        fprintf(stderr, "cd : %s", strerror(errno));
-    } else {
-
-        char *ancien_chemin = getenv("PWD");
-        char buffer_cwd[TAILLE_BUFFER];
-
-        getcwd(buffer_cwd, sizeof(buffer_cwd));
-
-        setenv("PWD", buffer_cwd, 1);
-
-        setenv("OLDPWD", ancien_chemin, 1);
-    }
-}
-
-
 //methode pour testé si c'est une commande interne
 int is_cmd_in(char *cmd) {
 
-    char *cmd_in[8] = {"cd",
-                       "type",
-                       "history",
-                       "export",
-                       "set",
-                       "exit",
-                       "unset",
-                       "!"
+    char *cmd_in[10] = {"cd",
+                        "type",
+                        "history",
+                        "export",
+                        "set",
+                        "exit",
+                        "unset",
+                        "!",
+                        "alias",
+                        "unalias",
     };
 
     int compteur = 0;
 
     while (compteur < 8) {
-
         if (strcmp(cmd, cmd_in[compteur]) == 0) {
             return 0;
         }
@@ -57,23 +27,40 @@ int is_cmd_in(char *cmd) {
     return 1;
 }
 
+//methode de la commande cd
+void my_cd() {
+    char *dossier = NULL;
+    char *chemin = strstr(buffer, " ");
+    if (chemin != NULL) {
+        size_t longueur_chemin = strcspn(chemin + 1, " ");
+        dossier = strndup(chemin + 1, longueur_chemin);
+    } else {
+        dossier = getenv("HOME");
+    }
+    int retour = chdir(dossier);
+    if (retour != 0) {
+        fprintf(stderr, "cd : %s", strerror(errno));
+    } else {
+        char *ancien_chemin = getenv("PWD");
+        char buffer_cwd[TAILLE_BUFFER];
+        getcwd(buffer_cwd, sizeof(buffer_cwd));
+        setenv("PWD", buffer_cwd, 1);
+        setenv("OLDPWD", ancien_chemin, 1);
+    }
+}
 
 //methode de la commande type
 void my_type() {
     char *tmp = strstr(buffer, " ");
     char *cmd = NULL;
-
     if (tmp != NULL) {
         size_t longueur_cmd = strcspn(tmp + 1, " ");
         cmd = strndup(tmp + 1, longueur_cmd);
-
         if (is_cmd_in(cmd) == 0) {
             printf("type : %s is a shell builtin\n", cmd);
         } else {
             printf("type : %s is a .......\n", cmd);
         }
-    } else {
-        // fprintf(stderr, "type : %s", strerror(errno));
     }
 }
 
@@ -82,7 +69,6 @@ void my_type() {
 void my_history() {
     if (strcmp(buffer, "history -c") == 0) {
         clear_history();
-        // write_history(".mpsh_history");
         write_history(dir_history);
     } else if (strcmp(buffer, "history") == 0) {
         HIST_ENTRY *entree_historique;
@@ -97,23 +83,18 @@ void my_history() {
 // methode de la commande !-n  n le num de la cmd dans mpsh_history
 void my_get_cmd_history(char **argv) {
     if (strcmp(buffer, "!") == 0) {}
-
     else {
         char *endptr = NULL;
-
         long entier = strtol(buffer + 1, &endptr, 10);
-
         if (entier == 0) {
             fprintf(stderr, "%s : element non trouvé\n", buffer);
         } else {
-
             HIST_ENTRY *historique;
             if (entier < 0) {
                 entier = history_length + entier;
             }
             if (entier < 0) {
                 remove_history(history_length - 1);
-                //write_history(".mpsh_history");
                 write_history(dir_history);
                 fprintf(stderr, "Entrée non valide\n");
             } else {
@@ -122,11 +103,9 @@ void my_get_cmd_history(char **argv) {
                     strcpy(buffer, historique->line);
                     remove_history(history_length - 1);
                     add_history(buffer);
-                    //write_history(".mpsh_history");
                     write_history(dir_history);
                     traitement_ligne(argv);
                 }
-
             }
         }
     }
@@ -138,10 +117,8 @@ void my_get_cmd_history(char **argv) {
 void my_export() {
     char *nom_variable = strstr(buffer, " ");
     if (nom_variable != NULL) {
-
         char *valeur_variable = NULL;
         Environnement *liste = var_environnement;
-
         while (liste != NULL) {
             if (strcmp(nom_variable + 1, liste->nom) == 0) {
                 valeur_variable = liste->valeur;
@@ -156,7 +133,7 @@ void my_export() {
 }
 
 //La commande unset supprime la variable.
-// J'appelle unsetenv poursupprimer celle-ci de l'environnement.
+// J'appelle unsetenv pour supprimer celle-ci de l'environnement.
 // Au cas où la variable n'a pas été exportée avec export (et n'est donc pas dans l'environnement,
 // mais uniquement dans la liste des variables shell), unsetvenv n'aura aucun effet,
 // je n'ai donc pas besoin de m'assurer que la variable à supprimer est dans l'environnement.
@@ -183,10 +160,8 @@ void my_unset() {
 
 //La commande alias_list ajoute ou modifie un alias_list
 void my_alias() {
-
     char *var = strdup(buffer);
     var = strstr(var, " ");
-
     if (var != NULL) {
         char *valeur_variable = strstr(var, "=");
         if (valeur_variable != NULL) {
@@ -209,7 +184,6 @@ void my_unalias() {
     if (nom_variable != NULL) {
         Alias *courant = alias_list;
         Alias *precedent = NULL;
-
         while (courant != NULL) {
             if (strcmp(nom_variable + 1, courant->nom) == 0) {
                 free(courant->valeur);
@@ -218,11 +192,11 @@ void my_unalias() {
                     precedent->next = courant->next;
                     free(courant);
                 }
-                //cas supression debut
-                else{
+                    //cas supression debut
+                else {
                     precedent = courant->next;
                     free(courant);
-                    alias_list=precedent;
+                    alias_list = precedent;
                 }
             } else {
                 precedent = courant;
@@ -241,49 +215,6 @@ void my_set() {
         liste = liste->next;
     }
 }
-
-
-//TODO: umask fonction
-/*
-void my_umask() {
-    char num[4];
-    long n1, n2, n3, flag = 0, n;
-
-    char *tmp = strstr(buffer, " ");
-    char *value = NULL;
-
-    if (tmp != NULL) {
-        size_t longueur_value = strcspn(tmp + 1, " ");
-        value = strndup(tmp + 1, longueur_value);
-
-        if ( value > 3) {
-            fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
-            return;
-        } else {
-            strcpy(num, value);
-            n = atol(num);
-
-            n1 = n / 100;
-            n2 = (n - (n1 * 100)) / 10;
-            n3 = (n - ((n1 * 100) + (n2 * 10)));
-
-            if (n1 >= 0 && n1 <= 7)
-                if (n2 >= 0 && n2 <= 7)
-                    if (n3 >= 0 && n3 <= 7) {
-                        flag = 1;
-                        umask((__mode_t) n);
-                    }//end if
-
-            if (flag != 1) {
-                fprintf(stderr, "%s : illegal argument for umask\n", buffer);
-            }
-        }
-    }
-
-
-}
-*/
-
 
 //methode de la commande exit
 void my_exit() { exit(EXIT_SUCCESS); }
@@ -342,7 +273,7 @@ int traitement_fichier_sh(char **argv) {
         Environnement *liste = liste_var_if;
 
         while (lecture != NULL) {
-            lecture = fgets(buffer, 150, fichier);
+            lecture = fgets(buffer, TAILLE_BUFFER, fichier);
             traitement_espaces_debut(buffer);
             if (lecture == NULL) break;
             if (buffer[strlen(buffer) - 1] == '\n') buffer[strlen(buffer) - 1] = '\0';
@@ -394,11 +325,11 @@ int traitement_fichier_sh(char **argv) {
             } else {
                 if (test == 0) {
                     if (detection_else == 0) {
-                        traitement_cmd(liste->valeur, argv);
+                        traitement_commande(liste->valeur, argv);
                     }
                 } else {
                     if (detection_else == 1) {
-                        traitement_cmd(liste->valeur, argv);
+                        traitement_commande(liste->valeur, argv);
                     }
                 }
             }
@@ -448,16 +379,16 @@ int traitement_fichier_sh(char **argv) {
         char *args_for[TAILLE_LIST_ARGS];
         creation_liste_arguments(args_for, liste->valeur);
         boucle = 3;
-        ajout_environnement(args_for[1], "0");
-        ajout_environnement(args_for[1], "0");
+        add_environnement(args_for[1], "0");
+        add_environnement(args_for[1], "0");
         while (args_for[boucle] != NULL) {
-            ajout_environnement(args_for[1], args_for[boucle]);
+            add_environnement(args_for[1], args_for[boucle]);
             liste = liste_var_if;
             liste = liste->next;
             liste = liste->next;
             while (liste != NULL) {
                 if (strcmp(liste->valeur, "done") == 0) break;
-                traitement_cmd(liste->valeur, argv);
+                traitement_commande(liste->valeur, argv);
                 liste = liste->next;
             }
             ++boucle;

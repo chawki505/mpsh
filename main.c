@@ -1,93 +1,21 @@
 #include "variables.h"
 
 
-//methode pour les redirection entrante <
-char *scan_redirection_entrante(char *arguments[TAILLE_LIST_ARGS]) {
-    char *redirection = NULL;
-    int increment = 0;
-
-    while (arguments[increment] != NULL) {
-        if (strcmp(arguments[increment], "<") == 0) {
-            redirection = arguments[increment + 1];
-            free(arguments[increment]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        }
-        ++increment;
-    }
-    return redirection;
-}
-
-//methode pour les redirection sortante > et >>
-char *scan_redirection_sortante(char *arguments[TAILLE_LIST_ARGS]) {
-    char *redirection = NULL;
-    int increment = 0;
-
-    while (arguments[increment] != NULL) {
-
-        if (strcmp(arguments[increment], ">") == 0) {
-            redirection = malloc(strlen(arguments[increment + 1]) + 1);
-            redirection[0] = 'w';
-            redirection[1] = '\0';
-            strcat(redirection, arguments[increment + 1]);
-            free(arguments[increment]);
-            free(arguments[increment + 1]);
-
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        } else if (strcmp(arguments[increment], "2>") == 0) {
-
-            redirection_err = 1;
-            redirection = malloc(strlen(arguments[increment + 1]) + 1);
-            redirection[0] = 'w';
-            redirection[1] = '\0';
-            strcat(redirection, arguments[increment + 1]);
-            free(arguments[increment]);
-            free(arguments[increment + 1]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-
-
-        } else if (strcmp(arguments[increment], ">>") == 0) {
-
-            redirection = malloc(strlen(arguments[increment + 1]) + 1);
-            redirection[0] = 'a';
-            redirection[1] = '\0';
-            strcat(redirection, arguments[increment + 1]);
-            free(arguments[increment]);
-            free(arguments[increment + 1]);
-            while (arguments[increment + 2] != NULL) {
-                arguments[increment] = arguments[increment + 2];
-                ++increment;
-            }
-            arguments[increment] = NULL;
-        }
-        ++increment;
-    }
-    return redirection;
-}
-
-
-//methode de l'ecture de l'entré du shell
+//methode de l'ecture du fichier mpshrc
 void lecture_mpshrc(char **arge) {
-    //char *line = NULL;
-    //FILE *file = fopen(dir_mpshrc, "r");
-    //if (file == NULL) exit(EXIT_FAILURE);
-    //line = malloc(512);
+    char *line = NULL;
+    FILE *file = fopen(dir_mpshrc, "r");
+    if (file == NULL) {
+
+        fprintf(stderr, "Erreur ouverture fichier de configuration .mpshrc\n");
+        exit(EXIT_FAILURE);
+    }
+
+    line = malloc(TAILLE_BUFFER);
 
 
-    /*while (1) {
-
-        if (fgets(line, 510, file) == NULL) break;
+    while (1) {
+        if (fgets(line, TAILLE_BUFFER, file) == NULL) break;
 
         if (line[strlen(line) - 1] == '\n') {
             line[strlen(line) - 1] = '\0';
@@ -95,39 +23,76 @@ void lecture_mpshrc(char **arge) {
         traitement_espaces_debut(line);
         traitement_espaces_fin(line);
 
-
-        if (line[0] == '#') {
-
-        } else if (strncmp(line, "alias", 5) == 0) {
-//            //traitement de la ligne
-//            char *var = strdup(line);
-//            str_replace(var, "alias_list ", "");
-//            //traitement de la ligne
-//            char *var_cmd = strdup(var);
-//            char *cmd = strstr(var_cmd, "=");
-//
-//            if (cmd != NULL) {
-//                char *nom_var = strndup(var_cmd, strlen(var_cmd) - strlen(cmd));
-//                //ajout_alias(nom_var, valeur_var + 1);
-//                free(nom_var);
+        if (line[0] == '#') {}
+        else if (strncmp(line, "alias", 5) == 0) {
+            //traitement de la ligne
+            char *var = strdup(line);
+            var = strstr(var, " ");
+            if (var != NULL) {
+                char *valeur_variable = strstr(var, "=");
+                if (valeur_variable != NULL) {
+                    char *nom_var = strndup(var + 1, strlen(var + 1) - strlen(valeur_variable));
+                    ajout_alias(nom_var, valeur_variable + 1);
+                    free(nom_var);
+                }
+            } else {
+                Alias *liste = alias_list;
+                while (liste != NULL) {
+                    printf("Alias : %s=%s\n", liste->nom, liste->valeur);
+                    liste = liste->next;
+                }
+            }
 
         } else {
-            //traitement de la ligne
+            //traitement de la variable de la ligne
             char *var = strdup(line);
             char *valeur_var = strstr(var, "=");
 
             if (valeur_var != NULL) {
                 char *nom_var = strndup(var, strlen(var) - strlen(valeur_var));
-                ajout_environnement(nom_var, valeur_var + 1);
-                printf("%s\n", var);
+                //traitement si il existe des var dans la var
+                add_environnement(nom_var, valeur_var + 1);
                 free(nom_var);
             } else {
-                //traitement_cmd(var, arge);
+                //traitement_commande(var, arge);
             }
             free(var);
         }
-    }*/
+    }
 
+}
+
+void init_ve(char **arge) {
+
+    HOME = getenv("HOME");
+    USER = getenv("USER");
+
+    gethostname(HOSTNAME, TAILLE_BUFFER);
+
+    dir_history[0] = '\0';
+    strcat(dir_history, HOME);
+    strcat(dir_history, "/.mpsh_history");
+
+    dir_mpshrc[0] = '\0';
+    strcat(dir_mpshrc, HOME);
+    strcat(dir_mpshrc, "/.mpshrc");
+
+
+    //ajout des variables d'environement dans notre shell
+    int increment = 0;
+    while (arge[increment] != NULL) {
+        char *valeur = strstr(arge[increment], "=");
+        char *nom = strndup(arge[increment], strlen(arge[increment]) - strlen(valeur));
+        add_environnement(nom, valeur + 1);
+        free(nom);
+        ++increment;
+    }
+    add_environnement("?", "0");
+    add_environnement("HOSTNAME", HOSTNAME);
+
+    lecture_mpshrc(arge);
+    CHEMIN = getenv("CHEMIN");
+    add_environnement("PATH", CHEMIN);
 }
 
 
@@ -181,38 +146,6 @@ char *lecture() {
 }
 
 
-void init_ve(char **arge) {
-
-    HOME = getenv("HOME");
-    USER = getenv("USER");
-
-    gethostname(HOSTNAME, TAILLE_BUFFER);
-
-    dir_history[0] = '\0';
-    strcat(dir_history, HOME);
-    strcat(dir_history, "/.mpsh_history");
-
-    dir_mpshrc[0] = '\0';
-    strcat(dir_mpshrc, HOME);
-    strcat(dir_mpshrc, "/.mpshrc");
-
-
-    //ajout des variables d'environement dans notre shell
-    int increment = 0;
-    while (arge[increment] != NULL) {
-        char *valeur = strstr(arge[increment], "=");
-        char *nom = strndup(arge[increment], strlen(arge[increment]) - strlen(valeur));
-        ajout_environnement(nom, valeur + 1);
-        free(nom);
-        ++increment;
-    }
-    ajout_environnement("?", "0");
-    ajout_environnement("HOSTNAME", HOSTNAME);
-
-   // lecture_mpshrc(arge);
-}
-
-
 int main(int argc, char *argv[], char *arge[]) {
     //save le nombre d'arguments
     global_argc = argc;
@@ -237,7 +170,6 @@ int main(int argc, char *argv[], char *arge[]) {
     //bind key clavier pour afichage des commandes
     //rl_bind_keyseq("\e[A", touche_fleche_haute);
     rl_bind_key('\t', touche_tab);
-    rl_bind_keyseq("\t\t", double_touche_tab);
 
     // test si le shell a été ouvert avec un fichier script en argument
     if (argc > 1) {

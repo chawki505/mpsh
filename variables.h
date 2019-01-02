@@ -17,6 +17,7 @@
 #include "commandes_internes.h"
 #include "extra.h"
 #include "analyseur.h"
+#include "redirection.h"
 
 //Type de variable d'environement
 typedef struct Environnement {
@@ -32,7 +33,7 @@ typedef struct Alias {
     struct Alias *next;
 } Alias;
 
-//liste des VE
+//liste des alias
 Alias *alias_list;
 //liste des VE
 Environnement *var_environnement;
@@ -41,17 +42,13 @@ Environnement *var_environnement;
 #define TAILLE_LIST_ARGS 32
 
 //VE important
-char CHEMIN[TAILLE_BUFFER];
-char *INVITE;
+char *CHEMIN;
 char *USER;
 char HOSTNAME[TAILLE_BUFFER];
 char *HOME;
-char HISTFILE[TAILLE_BUFFER];
-char HISTSIZE[TAILLE_BUFFER];
-char HISTFILESIZE[TAILLE_BUFFER];
+
 char dir_history[TAILLE_BUFFER];
 char dir_mpshrc[TAILLE_BUFFER];
-
 
 
 //variable global
@@ -61,12 +58,6 @@ char buffer[TAILLE_BUFFER];
 int global_argc;
 int redirection_err;
 FILE *fichier;
-
-
-
-extern char *scan_redirection_entrante(char *arguments[]);
-
-extern char *scan_redirection_sortante(char *arguments[]);
 
 
 #endif //SHELL_VARIABLES_H

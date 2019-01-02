@@ -19,6 +19,6 @@ HISTFILE=.mpsh_history
 INVITE=\033[1;31m$USER@$HOSTNAME\033[0m:\033[1;34m$PWD\033[0m$
 
 #aliases
-#alias_list ll='ls -alF'
-#alias_list la='ls -A'
-#alias_list l='ls -CF'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'

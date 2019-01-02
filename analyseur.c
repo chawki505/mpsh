@@ -46,27 +46,105 @@ void traitement_espaces_fin(char *chaine_a_traiter) {
     }
 }
 
+//methode pour creer un liste des arguments de la commande donner en entrer
+void creation_liste_arguments(char *arguments[TAILLE_LIST_ARGS], char *commande) {
+    int boucle, increment;
+    size_t longueur;
+
+    for (boucle = 0; boucle < TAILLE_LIST_ARGS; ++boucle) {
+        arguments[boucle] = NULL;
+    }
+
+    longueur = strcspn(commande, " \"");
+    arguments[0] = strndup(commande, longueur);
+    commande = commande + longueur;
+    increment = 1;
+
+    while (strlen(commande) > 0) {
+        if (commande[0] == ' ') ++commande;
+        char *separateur = " ";
+        if (commande[0] == '"') separateur = "\"";
+        if (strcmp(separateur, "\"") == 0) ++commande;
+        longueur = strcspn(commande, separateur);
+        arguments[increment] = strndup(commande, longueur);
+        commande = commande + longueur;
+        if (strcmp(separateur, "\"") == 0) ++commande;
+        ++increment;
+    }
+}
+
+
+//vider la memoire des arguments
+void liberation_arguments(char *arguments[TAILLE_LIST_ARGS]) {
+    int increment = 0;
+    while (arguments[increment] != NULL) {
+        free(arguments[increment]);
+        increment++;
+    }
+}
+
+
+//traitement d'une ligne de commande
+void traitement_ligne(char **argv) {
+
+    traitement_espaces_debut(buffer);
+    traitement_espaces_fin(buffer);
+
+    //traitement des commandes internes
+    if (strncmp(buffer, "cd", 2) == 0) {
+        my_cd();
+    } else if (strcmp(buffer, "exit") == 0) {
+        my_exit();
+    } else if (strncmp(buffer, "type", 4) == 0) {
+        my_type();
+    } else if (strncmp(buffer, "alias", 5) == 0) {
+        my_alias();
+    } else if (strncmp(buffer, "unalias", 7) == 0) {
+        my_unalias();
+    } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
+    else if (strcmp(buffer, "set") == 0) {
+        my_set();
+    } else if (strncmp(buffer, "unset", 5) == 0) {
+        my_unset();
+    } else if (strncmp(buffer, "export", 6) == 0) {
+        my_export();
+    } else if (strncmp(buffer, "!", 1) == 0) {
+        my_get_cmd_history(argv);
+    } else if (strcmp(buffer, "history") == 0 || strcmp(buffer, "history -c") == 0) {
+        my_history();
+    } else if (strncmp(buffer, "exit", 4) == 0) {
+        my_exit();
+    } else {
+        //traitement des commandes externes ou ajout des variable E
+        char *cmd = strdup(buffer);
+        char *tmp = strtok(cmd, ";");
+        while (tmp != NULL) {
+
+            char *valeur_var = strstr(tmp, "=");
+
+            if (valeur_var != NULL) {
+                char *nom_var = strndup(tmp, strlen(tmp) - strlen(valeur_var));
+                add_environnement(nom_var, valeur_var + 1);
+                free(nom_var);
+            } else {
+                traitement_commande(tmp, argv);
+            }
+            tmp = strtok(NULL, ";");
+        }
+        free(cmd);
+    }
+}
+
 
 //traitement d'une commande
-void traitement_cmd(char *commande, char **argv) {
-    char *cmd1, *cmd2 = NULL;
-    char *fichier_redirection_sortante, *fichier_redirection_entrante;
+void traitement_commande(char *commande, char **argv) {
+    char *cmd1 = NULL, *cmd2 = NULL;
+    char *fichier_redirection_sortante = NULL, *fichier_redirection_entrante = NULL;
     char *fichier_redirection_sortante2 = NULL, *fichier_redirection_entrante2 = NULL;
     int pipefd[2];
 
     //traitement des erreurs d'ecriture de commande si existe
     str_replace(commande, "\n", "");
-
-    //str_replace(commande, " <", "<");
-    //str_replace(commande, "< ", "<");
-    //str_replace(commande, "<", " < ");
-    //str_replace(commande, " >", ">");
-    //str_replace(commande, "> ", ">");
-    //str_replace(commande, ">", " > ");
-    //str_replace(commande, " >  > ", " >> ");
-    //str_replace(commande, "| ", "|");
-    //str_replace(commande, " |", "|");
-    //str_replace(commande, "|", " | ");
 
     //test if existe pip
     char *existe_pipe = strstr(commande, " | ");
@@ -87,9 +165,6 @@ void traitement_cmd(char *commande, char **argv) {
     //enregistrer les variables si elle existe dans la ligne de commande
     gestion_variables(arg_list, argv);
 
-    //traitement si existe etoile dans la commande (eg. ls *.c)
-    traitement_joker(arg_list);
-
     //traitement si il existe des redirection > ou >> ou <
     fichier_redirection_sortante = scan_redirection_sortante(arg_list);
     fichier_redirection_entrante = scan_redirection_entrante(arg_list);
@@ -98,7 +173,6 @@ void traitement_cmd(char *commande, char **argv) {
     if (cmd2 != NULL) {
         creation_liste_arguments(arg_list2, cmd2);
         gestion_variables(arg_list2, argv);
-        traitement_joker(arg_list2);
         fichier_redirection_sortante2 = scan_redirection_sortante(arg_list2);
         fichier_redirection_entrante2 = scan_redirection_entrante(arg_list2);
     }
@@ -108,6 +182,7 @@ void traitement_cmd(char *commande, char **argv) {
     pid_t process1 = fork();
 
     int status1;
+    //traitement du procesus fils apres le fork
     if (process1 == 0) {
 
         if (cmd2 != NULL) {
@@ -155,7 +230,7 @@ void traitement_cmd(char *commande, char **argv) {
     }
 
 
-    //wait(&process1);
+    //attente du procecus pere
     if (waitpid(process1, &status1, 0) == -1) {
         perror("waitpid failed");
         exit(EXIT_FAILURE);
@@ -165,7 +240,7 @@ void traitement_cmd(char *commande, char **argv) {
         const int es = WEXITSTATUS(status1);
         char ess[10];
         snprintf(ess, 10, "%d", es);
-        ajout_environnement("?", ess);
+        add_environnement("?", ess);
     }
 
 
@@ -217,8 +292,6 @@ void traitement_cmd(char *commande, char **argv) {
             }
             exit(EXIT_SUCCESS);
         }
-        //wait(&process2);
-
         close(pipefd[0]);
         close(pipefd[1]);
 
@@ -226,17 +299,16 @@ void traitement_cmd(char *commande, char **argv) {
             perror("waitpid failed");
             exit(EXIT_FAILURE);
         }
-
         if (WIFEXITED(status2)) {
             const int es = WEXITSTATUS(status2);
             char ess[10];
             snprintf(ess, 10, "%d", es);
-            ajout_environnement("?", ess);
+            add_environnement("?", ess);
         }
-
     }
 
 
+    //netoage de la memoire
     if (cmd2 != NULL) {
         if (fichier_redirection_sortante2 != NULL) free(fichier_redirection_sortante2);
         if (fichier_redirection_entrante2 != NULL) free(fichier_redirection_entrante2);
@@ -249,137 +321,4 @@ void traitement_cmd(char *commande, char **argv) {
     free(cmd1);
 }
 
-
-//methode pour creer un liste des arguments de la commande donner en entrer
-void creation_liste_arguments(char *arguments[32], char *commande) {
-    int boucle, increment;
-    size_t longueur;
-
-    for (boucle = 0; boucle < TAILLE_LIST_ARGS; ++boucle) {
-        arguments[boucle] = NULL;
-    }
-
-    longueur = strcspn(commande, " \"");
-    arguments[0] = strndup(commande, longueur);
-    commande = commande + longueur;
-    increment = 1;
-
-    while (strlen(commande) > 0) {
-        if (commande[0] == ' ') ++commande;
-        char *separateur = " ";
-        if (commande[0] == '"') separateur = "\"";
-        if (strcmp(separateur, "\"") == 0) ++commande;
-        longueur = strcspn(commande, separateur);
-        arguments[increment] = strndup(commande, longueur);
-        commande = commande + longueur;
-        if (strcmp(separateur, "\"") == 0) ++commande;
-        ++increment;
-    }
-}
-
-
-//vider la memoire des arguments
-void liberation_arguments(char *arguments[TAILLE_LIST_ARGS]) {
-    int increment = 0;
-    while (arguments[increment] != NULL) {
-        free(arguments[increment]);
-        increment++;
-    }
-}
-
-//traitement du caractere *
-void traitement_joker(char *arguments[TAILLE_LIST_ARGS]) {
-    char *arg_list_tmp[TAILLE_LIST_ARGS];
-
-    int increment = 0;
-    int increment_tmp = 0;
-    while (arguments[increment] != NULL) {
-        size_t longueur_sans_asterisque = strcspn(arguments[increment], "*");
-        char *tmp = strstr(arguments[increment], "*");
-        if (tmp != NULL) {
-            if (longueur_sans_asterisque != 0) tmp = tmp - longueur_sans_asterisque;
-            glob_t g;
-            int retour_glob = glob(tmp, 0, NULL, &g);
-            if (retour_glob == 0) {
-                int boucle;
-                for (boucle = 0; boucle < g.gl_pathc; ++boucle) {
-                    arg_list_tmp[increment_tmp] = strdup(g.gl_pathv[boucle]);
-                    ++increment_tmp;
-                }
-                free(arguments[increment]);
-            } else {
-                arg_list_tmp[increment_tmp] = arguments[increment];
-                ++increment_tmp;
-            }
-            globfree(&g);
-        } else {
-            arg_list_tmp[increment_tmp] = arguments[increment];
-            ++increment_tmp;
-        }
-        ++increment;
-    }
-    arg_list_tmp[increment_tmp] = NULL;
-    increment = 0;
-    while (arg_list_tmp[increment] != NULL) {
-        arguments[increment] = arg_list_tmp[increment];
-        ++increment;
-    }
-    arguments[increment] = NULL;
-}
-
-
-//traitement d'une ligne de commande
-void traitement_ligne(char **argv) {
-
-    traitement_espaces_debut(buffer);
-    traitement_espaces_fin(buffer);
-
-    //traitement des commandes internes
-    if (strncmp(buffer, "cd", 2) == 0) {
-        my_cd();
-    } else if (strcmp(buffer, "exit") == 0) {
-        my_exit();
-    } else if (strncmp(buffer, "type", 4) == 0) {
-        my_type();
-    } else if (strncmp(buffer, "alias", 5) == 0) {
-        my_alias();
-    } else if (strncmp(buffer, "unalias", 7) == 0) {
-        my_unalias();
-    } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
-    else if (strcmp(buffer, "set") == 0) {
-        my_set();
-    } else if (strncmp(buffer, "unset", 5) == 0) {
-        my_unset();
-    } else if (strncmp(buffer, "export", 6) == 0) {
-        my_export();
-    } else if (strncmp(buffer, "!", 1) == 0) {
-        my_get_cmd_history(argv);
-    } else if (strcmp(buffer, "history") == 0 || strcmp(buffer, "history -c") == 0) {
-        my_history();
-    } else if (strncmp(buffer, "exit", 4) == 0) {
-        my_exit();
-        // } else if (strncmp(buffer, "$", 1) == 0) {
-        //   char *nom_variable = strstr(buffer, "$");
-        // char *valleur_variable = getenv(nom_variable+1);
-        // printf("%s",valleur_variable);
-    } else {
-        //traitement des commandes externes ou ajout des variable E
-        char *cmd = strdup(buffer);
-        char *tmp = strtok(cmd, ";");
-        while (tmp != NULL) {
-
-            char *valeur_var = strstr(tmp, "=");
-
-            if (valeur_var != NULL) {
-                char *nom_var = strndup(tmp, strlen(tmp) - strlen(valeur_var));
-                ajout_environnement(nom_var, valeur_var + 1);
-                free(nom_var);
-            } else {
-                traitement_cmd(tmp, argv);
-            }
-            tmp = strtok(NULL, ";");
-        }
-        free(cmd);
-    }
-}
 

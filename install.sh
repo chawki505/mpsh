@@ -15,6 +15,7 @@ mkdir -p $HOME/.local/bin
 
 echo "ajout de l'executable dans le dossier bin de `echo $USER` "
 cp mpsh /$HOME/bin/
+cp .mpshrc /$HOME/
 
 echo "FIN"
 
