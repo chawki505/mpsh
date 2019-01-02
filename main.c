@@ -88,10 +88,8 @@ void init_ve(char **arge) {
     }
     add_environnement("?", "0");
     add_environnement("HOSTNAME", HOSTNAME);
-
     lecture_mpshrc(arge);
     CHEMIN = getenv("CHEMIN");
-    add_environnement("PATH", CHEMIN);
 }
 
 
