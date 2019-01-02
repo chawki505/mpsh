@@ -10,9 +10,9 @@
 
 extern void str_replace(char *chaine, char *recherche, char *remplace);
 
-extern void traitement_espaces_debut(char *chaine_a_traiter);
+extern void supp_espaces_debut(char *chaine_a_traiter);
 
-extern void traitement_espaces_fin(char *chaine_a_traiter);
+extern void sup_espaces_fin(char *chaine_a_traiter);
 
 extern void traitement_commande(char *commande, char **argv);
 

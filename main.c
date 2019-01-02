@@ -20,8 +20,8 @@ void lecture_mpshrc() {
         if (line[strlen(line) - 1] == '\n') {
             line[strlen(line) - 1] = '\0';
         }
-        traitement_espaces_debut(line);
-        traitement_espaces_fin(line);
+        supp_espaces_debut(line);
+        sup_espaces_fin(line);
 
         if (line[0] == '#') {}
         else if (strncmp(line, "alias", 5) == 0) {
@@ -32,7 +32,7 @@ void lecture_mpshrc() {
                 char *valeur_variable = strstr(var, "=");
                 if (valeur_variable != NULL) {
                     char *nom_var = strndup(var + 1, strlen(var + 1) - strlen(valeur_variable));
-                    ajout_alias(nom_var, valeur_variable + 1);
+                    ajouter_alias(nom_var, valeur_variable + 1);
                     free(nom_var);
                 }
             } else {
@@ -51,7 +51,7 @@ void lecture_mpshrc() {
             if (valeur_var != NULL) {
                 char *nom_var = strndup(var, strlen(var) - strlen(valeur_var));
                 //TODO:traitement si il existe des var dans la valeur de var
-                add_environnement(nom_var, valeur_var + 1);
+                ajouter_variable_environnement(nom_var, valeur_var + 1);
                 free(nom_var);
             } else {
             }
@@ -82,12 +82,12 @@ void init_ve(char **arge) {
     while (arge[increment] != NULL) {
         char *valeur = strstr(arge[increment], "=");
         char *nom = strndup(arge[increment], strlen(arge[increment]) - strlen(valeur));
-        add_environnement(nom, valeur + 1);
+        ajouter_variable_environnement(nom, valeur + 1);
         free(nom);
         ++increment;
     }
-    add_environnement("?", "0");
-    add_environnement("HOSTNAME", HOSTNAME);
+    ajouter_variable_environnement("?", "0");
+    ajouter_variable_environnement("HOSTNAME", HOSTNAME);
     lecture_mpshrc();
     CHEMIN = getenv("CHEMIN");
 }

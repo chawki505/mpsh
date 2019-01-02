@@ -4,7 +4,7 @@ Alias *exist_alias(char *nom_variable);
 
 
 //parcour la list des VE et ajoute ou modifier la variable VE
-void add_environnement(char *nom_variable, char *valeur_variable) {
+void ajouter_variable_environnement(char *nom_variable, char *valeur_variable) {
     Environnement *liste = var_environnement;
     int test = 0;
     if (strncmp(valeur_variable, "$", 1) == 0) {
@@ -60,7 +60,7 @@ char *get_ve_value(char *nom_variable) {
     return nom_variable;
 }
 
-void ajout_alias(char *nom_variable, char *valeur_variable) {
+void ajouter_alias(char *nom_variable, char *valeur_variable) {
     Alias *liste = alias_list;
     Alias *tmp;
 
@@ -93,7 +93,6 @@ void ajout_alias(char *nom_variable, char *valeur_variable) {
 //methode qui donne la valeur d'une variable e.
 char *get_alias_value(char *nom_variable) {
     Alias *liste = alias_list;
-
     if (liste != NULL) {
         while (liste->next != NULL) {
             if (strcmp(nom_variable, liste->nom) == 0) {

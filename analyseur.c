@@ -31,7 +31,7 @@ void str_replace(char *chaine, char *recherche, char *remplace) {
 
 
 //suprime les espace au debut de la chaine
-void traitement_espaces_debut(char *chaine_a_traiter) {
+void supp_espaces_debut(char *chaine_a_traiter) {
     char *nouvelle_chaine = chaine_a_traiter;
     while (nouvelle_chaine[0] == ' ') {
         ++nouvelle_chaine;
@@ -40,7 +40,7 @@ void traitement_espaces_debut(char *chaine_a_traiter) {
 }
 
 //suprime les espaces en fin de chaine et ajouter ajouter le caractere de fin
-void traitement_espaces_fin(char *chaine_a_traiter) {
+void sup_espaces_fin(char *chaine_a_traiter) {
     while (chaine_a_traiter[strlen(chaine_a_traiter) - 1] == ' ') {
         chaine_a_traiter[strlen(chaine_a_traiter) - 1] = '\0';
     }
@@ -87,8 +87,8 @@ void liberation_arguments(char *arguments[TAILLE_LIST_ARGS]) {
 //traitement d'une ligne de commande
 void traitement_ligne(char **argv) {
 
-    traitement_espaces_debut(buffer);
-    traitement_espaces_fin(buffer);
+    supp_espaces_debut(buffer);
+    sup_espaces_fin(buffer);
 
     //traitement des commandes internes
     if (strncmp(buffer, "cd", 2) == 0) {
@@ -124,7 +124,7 @@ void traitement_ligne(char **argv) {
 
             if (valeur_var != NULL) {
                 char *nom_var = strndup(tmp, strlen(tmp) - strlen(valeur_var));
-                add_environnement(nom_var, valeur_var + 1);
+                ajouter_variable_environnement(nom_var, valeur_var + 1);
                 free(nom_var);
             } else {
                 traitement_commande(tmp, argv);
@@ -240,7 +240,7 @@ void traitement_commande(char *commande, char **argv) {
         const int es = WEXITSTATUS(status1);
         char ess[10];
         snprintf(ess, 10, "%d", es);
-        add_environnement("?", ess);
+        ajouter_variable_environnement("?", ess);
     }
 
 
@@ -303,7 +303,7 @@ void traitement_commande(char *commande, char **argv) {
             const int es = WEXITSTATUS(status2);
             char ess[10];
             snprintf(ess, 10, "%d", es);
-            add_environnement("?", ess);
+            ajouter_variable_environnement("?", ess);
         }
     }
 

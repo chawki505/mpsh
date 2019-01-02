@@ -3,9 +3,9 @@
 
 #include "variables.h"
 
-extern void add_environnement(char *nom_variable, char *valeur_variable);
+extern void ajouter_variable_environnement(char *nom_variable, char *valeur_variable);
 
-extern void ajout_alias(char *nom_variable, char *valeur_variable);
+extern void ajouter_alias(char *nom_variable, char *valeur_variable);
 
 extern void gestion_variables(char *arguments[], char **argv);
 

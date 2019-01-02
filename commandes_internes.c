@@ -136,7 +136,7 @@ void my_alias() {
         char *valeur_variable = strstr(var, "=");
         if (valeur_variable != NULL) {
             char *nom_var = strndup(var + 1, strlen(var + 1) - strlen(valeur_variable));
-            ajout_alias(nom_var, valeur_variable + 1);
+            ajouter_alias(nom_var, valeur_variable + 1);
             free(nom_var);
         }
     } else {
