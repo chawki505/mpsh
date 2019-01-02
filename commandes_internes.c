@@ -11,9 +11,9 @@ int is_cmd_in(char *cmd) {
                         "set",
                         "exit",
                         "unset",
-                        "!",
                         "alias",
                         "unalias",
+                        "help"
     };
 
     int compteur = 0;
@@ -80,36 +80,6 @@ void my_history() {
     }
 }
 
-// methode de la commande !-n  n le num de la cmd dans mpsh_history
-void my_get_cmd_history(char **argv) {
-    if (strcmp(buffer, "!") == 0) {}
-    else {
-        char *endptr = NULL;
-        long entier = strtol(buffer + 1, &endptr, 10);
-        if (entier == 0) {
-            fprintf(stderr, "%s : element non trouvé\n", buffer);
-        } else {
-            HIST_ENTRY *historique;
-            if (entier < 0) {
-                entier = history_length + entier;
-            }
-            if (entier < 0) {
-                remove_history(history_length - 1);
-                write_history(dir_history);
-                fprintf(stderr, "Entrée non valide\n");
-            } else {
-                historique = history_get((int) entier);
-                if (historique != NULL) {
-                    strcpy(buffer, historique->line);
-                    remove_history(history_length - 1);
-                    add_history(buffer);
-                    write_history(dir_history);
-                    traitement_ligne(argv);
-                }
-            }
-        }
-    }
-}
 
 //fonction export
 //Dans mon code, export va appeler setenv avec le nom de la variable en paramètre.
@@ -220,181 +190,87 @@ void my_set() {
 void my_exit() { exit(EXIT_SUCCESS); }
 
 
-//traitement des instructions d'un fichier scipte sh
-int traitement_fichier_sh(char **argv) {
+//methode help pour les commande internene
+void my_help() {
 
-    //ignoré le commantaire du scripte shell
-    if (buffer[0] == '#') {}
-        //traitement if
-    else if (strncmp(buffer, "if", 2) == 0) {
-        char *lecture = buffer;
-        int boucle = 0;
-        Environnement *var_if = malloc(sizeof(Environnement));
-        var_if->nom = malloc(4);
-        sprintf(var_if->nom, "%d", boucle);
-        var_if->valeur = strdup(buffer);
-        var_if->next = NULL;
+    char *nom_commande = strstr(buffer, " ");
+    if (nom_commande != NULL) {
 
-        if (strncmp(buffer, "if [", 4) != 0) {
-            fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
-            exit(EXIT_FAILURE);
+        if (strncmp(nom_commande + 1, "cd", 2) == 0) {
+            printf("cd: cd [dir]\n"
+                   "    Change the shell working directory.\n"
+                   "    \n"
+                   "    Change the current directory to DIR.  The default DIR is the value of the\n"
+                   "    HOME shell variable.\n"
+                   "    Exit Status:\n"
+                   "    Returns 0 if the directory is changed.\n");
+        } else if (strncmp(nom_commande + 1, "alias", 5) == 0) {
+            printf("alias: alias [name=value] ... ]\n"
+                   "    Define or display aliases.\n"
+                   "    \n"
+                   "    Without arguments, `alias' prints the list of aliases in the reusable\n"
+                   "    form `alias NAME=VALUE' on standard output.\n"
+                   "    \n"
+                   "    Otherwise, an alias is defined for each NAME whose VALUE is given.\n"
+                   "    A trailing space in VALUE causes the next word to be checked for\n"
+                   "    alias substitution when the alias is expanded.\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    alias returns true unless a NAME is supplied for which no alias has been\n"
+                   "    defined.\n");
+        } else if (strncmp(nom_commande + 1, "unalias", 7) == 0) {
+            printf("unalias: unalias name\n"
+                   "    Remove each NAME from the list of defined aliases.\n"
+                   "    \n"
+                   "    Return success unless a NAME is not an existing alias.\n");
+        } else if (strncmp(nom_commande + 1, "export", 6) == 0) {
+            printf("export: export [name=value]\n"
+                   "    Set export attribute for shell variables.\n"
+                   "    \n"
+                   "    Marks each NAME for automatic export to the environment of subsequently\n"
+                   "    executed commands.  If VALUE is supplied, assign VALUE before exporting.\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    Returns success unless an invalid option is given or NAME is invalid.\n");
+        } else if (strncmp(nom_commande + 1, "set", 3) == 0) {
+
+            printf("set: set \n"
+                   "    print all environment variable of shell.\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    Returns success unless an invalid option is given.\n");
+        } else if (strncmp(nom_commande + 1, "exit", 4) == 0) {
+            printf("exit: exit \n"
+                   "    Exit Shell:\n"
+                   "    Returns success.\n");
+        } else if (strncmp(nom_commande + 1, "unset", 5) == 0) {
+            printf("unset: unset name \n"
+                   "    Delete environment variable [name] of shell.\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    Returns success.\n");
+        } else if (strncmp(nom_commande + 1, "help", 4) == 0) {
+            printf("help: help name \n"
+                   "    print help commande name of shell.\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    Returns success unless an invalid option is given.\n");
+        } else if (strncmp(nom_commande + 1, "history", 7) == 0) {
+            printf("history: history [-c] \n"
+                   "    print all historique commande of shell.\n"
+                   "    \n"
+                   "    Options:\n"
+                   "      -c\tclear the history list by deleting all of the entries"
+                   "    Exit Status:\n"
+                   "    Returns success unless an invalid option is given.\n");
+        } else if (strncmp(nom_commande + 1, "type", 4) == 0) {
+            printf("type: type name \n"
+                   "    print type of commande [name].\n"
+                   "    \n"
+                   "    Exit Status:\n"
+                   "    Returns success unless an invalid option is given.\n");
+        } else {
+            printf("Use commande : man %s \n", nom_commande + 1);
         }
-
-        char *test_fin = strstr(buffer, "]");
-
-        if (strcmp(test_fin, "]") != 0 && strcmp(test_fin, "] ") != 0) {
-            fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
-            exit(EXIT_FAILURE);
-        }
-
-        char *formule = strdup(buffer);
-        str_replace(formule, "if [", "");
-        str_replace(formule, "]", "");
-        str_replace(formule, " ", "");
-        str_replace(formule, "\"", "");
-        size_t retour = strcspn(formule, "=");
-
-        if (retour == strlen(formule)) {
-            fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
-            exit(EXIT_FAILURE);
-        }
-
-        char *arg_list_temp[TAILLE_LIST_ARGS];
-
-        arg_list_temp[0] = strndup(formule, retour);
-        arg_list_temp[1] = strdup(formule + retour + 1);
-        arg_list_temp[2] = NULL;
-        gestion_variables(arg_list_temp, argv);
-        int test = strcmp(arg_list_temp[0], arg_list_temp[1]);
-        free(arg_list_temp[1]);
-        free(arg_list_temp[0]);
-        free(formule);
-        Environnement *liste_var_if = var_if;
-        Environnement *liste = liste_var_if;
-
-        while (lecture != NULL) {
-            lecture = fgets(buffer, TAILLE_BUFFER, fichier);
-            traitement_espaces_debut(buffer);
-            if (lecture == NULL) break;
-            if (buffer[strlen(buffer) - 1] == '\n') buffer[strlen(buffer) - 1] = '\0';
-            if (strncmp(buffer, "fi", 2) == 0) {
-                ++boucle;
-                var_if = malloc(sizeof(Environnement));
-                var_if->nom = malloc(4);
-                sprintf(var_if->nom, "%d", boucle);
-                var_if->valeur = strdup(buffer);
-                var_if->next = NULL;
-                liste->next = var_if;
-                liste = var_if;
-                lecture = NULL;
-            } else {
-                ++boucle;
-                var_if = malloc(sizeof(Environnement));
-                var_if->nom = malloc(4);
-                sprintf(var_if->nom, "%d", boucle);
-                var_if->valeur = strdup(buffer);
-                var_if->next = NULL;
-                liste->next = var_if;
-                liste = var_if;
-            }
-        }
-
-        if (strcmp(liste->valeur, "fi") != 0) {
-            fprintf(stderr, "%s : Erreur de syntaxe\n", buffer);
-            exit(EXIT_FAILURE);
-        }
-
-        liste = liste_var_if;
-        liste = liste->next;
-        str_replace(liste->valeur, " ", "");
-        if (strcmp(liste->valeur, "then") != 0) {
-            fprintf(stderr, "*%s* : Erreur de syntaxe\n", liste->valeur);
-            exit(EXIT_FAILURE);
-        }
-
-        liste = liste_var_if;
-        liste = liste->next;
-        liste = liste->next;
-        int detection_else = 0;
-
-        while (liste != NULL) {
-            if (strcmp(liste->valeur, "else") == 0) {
-                detection_else = 1;
-            } else if (strcmp(liste->valeur, "fi") == 0) {
-            } else if (liste->valeur[0] == '#') {
-            } else {
-                if (test == 0) {
-                    if (detection_else == 0) {
-                        traitement_commande(liste->valeur, argv);
-                    }
-                } else {
-                    if (detection_else == 1) {
-                        traitement_commande(liste->valeur, argv);
-                    }
-                }
-            }
-            liste = liste->next;
-        }
-        return 0;
-
-        //traitement boucle
-    } else if (strncmp(buffer, "for", 3) == 0) {
-        int boucle = 0;
-        Environnement *var_if = malloc(sizeof(Environnement));
-        var_if->nom = malloc(4);
-        sprintf(var_if->nom, "%d", boucle);
-        var_if->valeur = strdup(buffer);
-        var_if->next = NULL;
-        ++boucle;
-        Environnement *liste_var_if = var_if;
-        Environnement *liste = liste_var_if;
-        char *lecture;
-        while (1) {
-            lecture = fgets(buffer, 150, fichier);
-            if (lecture == NULL) break;
-            if (buffer[strlen(buffer) - 1] == '\n') buffer[strlen(buffer) - 1] = '\0';
-            traitement_espaces_debut(buffer);
-            traitement_espaces_fin(buffer);
-            var_if = malloc(sizeof(Environnement));
-            var_if->nom = malloc(4);
-            sprintf(var_if->nom, "%d", boucle);
-            var_if->valeur = strdup(buffer);
-            var_if->next = NULL;
-            liste->next = var_if;
-            liste = var_if;
-            ++boucle;
-            if (strcmp(var_if->valeur, "done") == 0) break;
-        }
-        if (strcmp(liste->valeur, "done") != 0) {
-            fprintf(stderr, "Erreur de syntaxe : fin de fichier prématurée\n");
-            exit(EXIT_FAILURE);
-        }
-        liste = liste_var_if;
-        liste = liste->next;
-        if (strcmp(liste->valeur, "do") != 0) {
-            fprintf(stderr, "Erreur de syntaxe : \"do\" non trouvé dans structure for\n");
-            exit(EXIT_FAILURE);
-        }
-        liste = liste_var_if;
-        char *args_for[TAILLE_LIST_ARGS];
-        creation_liste_arguments(args_for, liste->valeur);
-        boucle = 3;
-        add_environnement(args_for[1], "0");
-        add_environnement(args_for[1], "0");
-        while (args_for[boucle] != NULL) {
-            add_environnement(args_for[1], args_for[boucle]);
-            liste = liste_var_if;
-            liste = liste->next;
-            liste = liste->next;
-            while (liste != NULL) {
-                if (strcmp(liste->valeur, "done") == 0) break;
-                traitement_commande(liste->valeur, argv);
-                liste = liste->next;
-            }
-            ++boucle;
-        }
-        return 0;
     }
-    return 1;
 }
-

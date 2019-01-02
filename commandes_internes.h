@@ -15,16 +15,15 @@ extern void my_unset();
 
 extern void my_export();
 
-extern void my_get_cmd_history(char **argv);
-
 extern void my_history();
-
-extern int traitement_fichier_sh(char **argv);
 
 extern void my_type();
 
 extern void my_alias();
 
 extern void my_unalias();
+
+extern void my_help();
+
 
 #endif //SHELL_COMMANDES_INTERNES_H

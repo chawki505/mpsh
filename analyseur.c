@@ -97,19 +97,18 @@ void traitement_ligne(char **argv) {
         my_exit();
     } else if (strncmp(buffer, "type", 4) == 0) {
         my_type();
+    } else if (strncmp(buffer, "help", 4) == 0) {
+        my_help();
     } else if (strncmp(buffer, "alias", 5) == 0) {
         my_alias();
     } else if (strncmp(buffer, "unalias", 7) == 0) {
         my_unalias();
-    } else if (traitement_fichier_sh(argv) == 0) {}//traitement des cmd d'un scripte sh
-    else if (strcmp(buffer, "set") == 0) {
+    } else if (strcmp(buffer, "set") == 0) {
         my_set();
     } else if (strncmp(buffer, "unset", 5) == 0) {
         my_unset();
     } else if (strncmp(buffer, "export", 6) == 0) {
         my_export();
-    } else if (strncmp(buffer, "!", 1) == 0) {
-        my_get_cmd_history(argv);
     } else if (strcmp(buffer, "history") == 0 || strcmp(buffer, "history -c") == 0) {
         my_history();
     } else if (strncmp(buffer, "exit", 4) == 0) {
@@ -117,6 +116,7 @@ void traitement_ligne(char **argv) {
     } else {
         //traitement des commandes externes ou ajout des variable E
         char *cmd = strdup(buffer);
+
         char *tmp = strtok(cmd, ";");
         while (tmp != NULL) {
 

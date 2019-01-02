@@ -1,19 +1,6 @@
 #set PATH so it includes user's private bin directories
-
 CHEMIN=~/bin//:/bin
 
-#historique
-#correspondant au nombre de commandes d'historique potentiellement en mémoire
-
-HISTSIZE=1000
-
-#correspond au nombre stocké dans le fichier d'historique
-
-HISTFILESIZE=2000
-
-#contient le nom du fichier stockant l'historique
-
-HISTFILE=.mpsh_history
 
 #style invite de commande
 INVITE=\033[1;31m$USER@$HOSTNAME\033[0m:\033[1;34m$PWD\033[0m$
