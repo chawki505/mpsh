@@ -1,4 +1,4 @@
-# Projet Systeme & C
+# Projet système & C
 ### Sujet : mpsh, aka mon petit shell
 [énoncé](http://moule.informatique.univ-paris-diderot.fr:8080/poulalhon/systeme-2018/blob/master/Projet/projet.md?fbclid=IwAR3ypcVoEs2U4O5sgV4aUWR-Tp4fweZAdx5B4tkvMdpXbHJqS5YMikkdBl8)
 
